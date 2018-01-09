@@ -12,7 +12,7 @@ func (fn *FileNamer)fileName() *[]byte {
 		panic("File Path Not Set")
 	}
 
-	parts := strings.Split(string(*fn.Path.Path), "/")
+	parts := strings.Split(string(fn.Path.Path), "/")
 	name := parts[len(parts) - 1]
 	rv := []byte(name)
 	return &rv

@@ -1,9 +1,12 @@
 package movie
 
+import "github.com/greenac/artemis/tools"
+
 type Actor struct {
 	FirstName *string
 	LastName *string
 	MiddleName *string
+	Files *map[string]tools.File
 }
 
 func (act *Actor)GetFirstName() string {
@@ -53,4 +56,24 @@ func (act *Actor)FullName() string {
 	}
 
 	return name
+}
+
+func (act *Actor)addFile(f *tools.File) {
+	if act.Files == nil {
+		files := make(map[string]tools.File)
+		files[*f.Name()] = *f
+		act.Files = &files
+	} else {
+		(*act.Files)[*f.Name()] = *f
+	}
+}
+
+func (act *Actor)AddFiles(fls *map[string]tools.File) {
+	if fls == nil {
+		return
+	}
+
+	for _, f := range *fls {
+		act.addFile(&f)
+	}
 }
