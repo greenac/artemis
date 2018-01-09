@@ -10,18 +10,75 @@ import (
 )
 
 type ActorHandler struct {
-	Paths *[]tools.FilePath
-	Actors *[]movie.Actor
+	DirPaths *[]tools.FilePath
+	FilePaths *[]tools.FilePath
+	Actors *map[string]movie.Actor
 }
 
 func (ah *ActorHandler)FillActors() error {
-	if ah.Paths == nil || len(*(ah.Paths)) == 0 {
+	if err := ah.FillActorsFromDirs(); err != nil {
+		return err
+	}
+
+	if err := ah.FillActorsFromFiles(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ah *ActorHandler)FillActorsFromFiles() error {
+	if ah.FilePaths == nil {
+		logger.Error("Cannot fill actors from file. FilePaths not initialized")
 		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
 	}
 
 	fNames := make([][]byte, 0)
+	for _, p := range *ah.FilePaths {
+		fh := tools.FileHandler{BasePath: p}
+		names, err := fh.ReadNameFile(&p)
+		if err != nil {
+			continue
+		}
 
-	for _, p := range *ah.Paths {
+		fNames = append(fNames, *names...)
+	}
+
+	actors := make(map[string]movie.Actor, len(fNames))
+	for _, n := range fNames {
+		a, err := ah.createActor(&n)
+		if err != nil {
+			continue
+		}
+
+		actors[a.FullName()] = *a
+	}
+
+	if ah.Actors == nil {
+		ah.Actors = &actors
+	} else {
+		for name, actor := range actors {
+			a, hasName := (*ah.Actors)[name]
+			if hasName {
+				a.AddFiles(actor.Files)
+			} else {
+				(*ah.Actors)[name] = actor
+			}
+		}
+	}
+
+	return nil
+}
+
+func (ah *ActorHandler)FillActorsFromDirs() error {
+	if ah.DirPaths == nil {
+		logger.Error("Cannot fill actors from dirs. DirPaths not initialized")
+		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+	}
+
+	fNames := make([][]byte, 0)
+	for _, p := range *ah.DirPaths {
+		logger.Log("Files for base path:", p.PathAsString())
 		fh := tools.FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
@@ -29,29 +86,37 @@ func (ah *ActorHandler)FillActors() error {
 			continue
 		}
 
-		ns := fh.DirFileNames()
-		fNames = append(fNames, *ns...)
+		names := fh.DirFileNames()
+		fNames = append(fNames, *names...)
 	}
 
-
-	logger.Warn("got:", len(fNames), "names")
-	actors := make([]movie.Actor, len(fNames))
-	for i, n := range fNames {
+	actors := make(map[string]movie.Actor, len(fNames))
+	for _, n := range fNames {
 		a, err := ah.createActor(&n)
 		if err != nil {
 			continue
 		}
 
-		actors[i] = *a
-
-		logger.Log(a, i, a.FullName())
+		actors[a.FullName()] = *a
 	}
 
-	ah.Actors = &actors
+	if ah.Actors == nil {
+		ah.Actors = &actors
+	} else {
+		for name, actor := range actors {
+			(*ah.Actors)[name] = actor
+		}
+	}
+
 	return nil
 }
 
 func (ah *ActorHandler)createActor(name *[]byte) (*movie.Actor, error) {
+	if name == nil || len(*name) == 0 {
+		logger.Error("Cannot create actor from name:", name)
+		return nil, artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+	}
+
 	n := string(*name)
 	parts := strings.Split(n, " ")
 	if len(parts) == 1 {
@@ -72,4 +137,12 @@ func (ah *ActorHandler)createActor(name *[]byte) (*movie.Actor, error) {
 	}
 
 	return &a, nil
+}
+
+func (ah *ActorHandler)PrintActors() {
+	i := 1
+	for _, actor := range *ah.Actors {
+		logger.Log(i, actor.FullName())
+		i += 1
+	}
 }
