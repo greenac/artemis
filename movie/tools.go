@@ -1,14 +1,14 @@
-package tools
+package movie
 
 import (
-	"github.com/greenac/artemis/movie"
+	"github.com/greenac/artemis/tools"
 	"errors"
 	"strings"
 	"regexp"
 	"fmt"
 )
 
-func FormatMovieName(f *File) (*[]byte, error) {
+func FormatMovieName(f *tools.File) (*[]byte, error) {
 	nn := make([]byte, len(*f.Name()))
 	copy(nn, *f.Name())
 	fmt.Println("old name:", string(nn))
@@ -34,7 +34,7 @@ func FormatMovieName(f *File) (*[]byte, error) {
 	return &newName, nil
 }
 
-func IsMovie(f *File) bool {
+func IsMovie(f *tools.File) bool {
 	mt, err := MovieType(f)
 	if err != nil {
 		if err.Error() == "NotMovie" {
@@ -47,7 +47,7 @@ func IsMovie(f *File) bool {
 	return mt != nil
 }
 
-func MovieType(f *File) (*movie.MovieType, error) {
+func MovieType(f *tools.File) (*MovieType, error) {
 	if f.IsDir() {
 		return nil, errors.New("NotMovie")
 	}
@@ -57,9 +57,9 @@ func MovieType(f *File) (*movie.MovieType, error) {
 		return nil, errors.New("NotMovie")
 	}
 
-	var movType *movie.MovieType = nil
+	var movType *MovieType = nil
 	mt := parts[len(parts) - 1]
-	for _, t := range *movie.MovieTypes() {
+	for _, t := range *MovieTypes() {
 		if mt == string(t) {
 			movType = &t
 			break
@@ -73,8 +73,8 @@ func MovieType(f *File) (*movie.MovieType, error) {
 	return movType, nil
 }
 
-func MovieFiles(fh *FileHandler) *[]File {
-	movieFiles := make([]File, 0)
+func MovieFiles(fh *tools.FileHandler) *[]tools.File {
+	movieFiles := make([]tools.File, 0)
 	for _, f := range *fh.Files {
 		if IsMovie(&f) {
 			movieFiles = append(movieFiles, f)
@@ -84,7 +84,7 @@ func MovieFiles(fh *FileHandler) *[]File {
 	return &movieFiles
 }
 
-func MovieFileNames(fh *FileHandler) *[][]byte {
+func MovieFileNames(fh *tools.FileHandler) *[][]byte {
 	mFiles := MovieFiles(fh)
 	names := make([][]byte, len(*mFiles))
 	for i, f := range *mFiles {
