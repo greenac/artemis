@@ -1,7 +1,7 @@
 package movie
 
-type MovieType string
-var movieTypes = [12]MovieType {
+type MovieExt string
+var movieExts = [12]MovieExt {
 "mp4",
 "wmv",
 "avi",
@@ -16,11 +16,11 @@ var movieTypes = [12]MovieType {
 "si",
 }
 
-func MovieTypes() *[]MovieType {
-mt := make([]MovieType, len(movieTypes))
-for i := 0; i < len(movieTypes); i++ {
-mt[i] = movieTypes[i]
-}
+func MovieExts() *[]MovieExt {
+	me := make([]MovieExt, len(movieExts))
+	for i := 0; i < len(movieExts); i++ {
+		me[i] = movieExts[i]
+	}
 
-return &mt
+	return &me
 }

@@ -2,17 +2,17 @@ package handlers
 
 import (
 	"github.com/greenac/artemis/tools"
-	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
+	"fmt"
 )
 
 type MovieHandler struct {
 	DirPaths *[]tools.FilePath
-	FilePaths *[]tools.FilePath
+	Movies *[]tools.FilePath
 }
 
-func (mh *MovieHandler)getMovies() error {
+func (mh *MovieHandler)GetMovies() error {
 	if mh.DirPaths == nil {
 		logger.Error("Cannot fill movies from dirs. DirPaths not initialized")
 		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
@@ -29,25 +29,12 @@ func (mh *MovieHandler)getMovies() error {
 		}
 
 		names := fh.DirFileNames()
+		for _, f := range *names {
+			fmt.Println(string(f))
+		}
+
 		fNames = append(fNames, *names...)
 	}
 
-	actors := make(map[string]movie.Actor, len(fNames))
-	for _, n := range fNames {
-		a, err := mh.createActor(&n)
-		if err != nil {
-			continue
-		}
-
-		actors[a.FullName()] = *a
-	}
-
-	if mh.Actors == nil {
-		mh.Actors = &actors
-	} else {
-		for name, actor := range actors {
-			(*mh.Actors)[name] = actor
-		}
-	}
-
+	return nil
 }

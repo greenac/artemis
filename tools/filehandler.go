@@ -104,7 +104,3 @@ func (fh *FileHandler)ReadNameFile(p *FilePath) (*[][]byte, error) {
 
 	return &names, nil
 }
-
-func (fh *FileHandler)BurrowFiles(filePaths *[]byte) *[]byte {
-	for _, path := range *
-}

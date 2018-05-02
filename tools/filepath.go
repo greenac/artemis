@@ -5,7 +5,7 @@ type FilePath struct {
 }
 
 func (fp *FilePath)PathDefined() bool {
-	return len(fp.Path) > 0
+	return fp.Path != ""
 }
 
 func (fp *FilePath)PathAsBytes() *[]byte {
