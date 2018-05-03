@@ -1,18 +1,18 @@
 package tools
 
 import (
-	"io/ioutil"
 	"github.com/greenac/artemis/logger"
-	"os"
 	"io"
+	"io/ioutil"
+	"os"
 )
 
 type FileHandler struct {
-	Files *[]File
+	Files    *[]File
 	BasePath FilePath
 }
 
-func (fh *FileHandler)SetFiles() error {
+func (fh *FileHandler) SetFiles() error {
 	if !fh.BasePath.PathDefined() {
 		panic("File Handler Base Path Not Set")
 	}
@@ -32,7 +32,7 @@ func (fh *FileHandler)SetFiles() error {
 	return nil
 }
 
-func (fh *FileHandler)FileNames() *[][]byte {
+func (fh *FileHandler) FileNames() *[][]byte {
 	names := make([][]byte, len(*fh.Files))
 	for i, f := range *fh.Files {
 		names[i] = []byte(*f.Name())
@@ -41,7 +41,7 @@ func (fh *FileHandler)FileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler)DirFiles() *[]File {
+func (fh *FileHandler) DirFiles() *[]File {
 	dFiles := make([]File, 0)
 	for _, f := range *fh.Files {
 		if f.IsDir() {
@@ -52,7 +52,7 @@ func (fh *FileHandler)DirFiles() *[]File {
 	return &dFiles
 }
 
-func (fh *FileHandler)DirFileNames() *[][]byte {
+func (fh *FileHandler) DirFileNames() *[][]byte {
 	dFiles := fh.DirFiles()
 	names := make([][]byte, len(*dFiles))
 	for i, f := range *dFiles {
@@ -62,8 +62,9 @@ func (fh *FileHandler)DirFileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler)ReadNameFile(p *FilePath) (*[][]byte, error) {
-	f, err := os.Open(p.PathAsString()); if err != nil {
+func (fh *FileHandler) ReadNameFile(p *FilePath) (*[][]byte, error) {
+	f, err := os.Open(p.PathAsString())
+	if err != nil {
 		logger.Error("Failed to open name file at path:", p.PathAsString(), err)
 		return nil, err
 	}

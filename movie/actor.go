@@ -1,79 +1,94 @@
 package movie
 
-import "github.com/greenac/artemis/tools"
+import (
+	"github.com/fatih/structs"
+	"strings"
+)
 
 type Actor struct {
-	FirstName *string
-	LastName *string
+	FirstName  *string
+	LastName   *string
 	MiddleName *string
-	Files *map[string]tools.File
+	Movies     []Movie
 }
 
-func (act *Actor)GetFirstName() string {
-	if act.FirstName == nil {
+func (a *Actor) GetFirstName() string {
+	if a.FirstName == nil {
 		return ""
 	}
 
-	return *act.FirstName
+	return *a.FirstName
 }
 
-func (act *Actor)GetMiddleName() string {
-	if act.MiddleName == nil {
+func (a *Actor) GetMiddleName() string {
+	if a.MiddleName == nil {
 		return ""
 	}
 
-	return *act.MiddleName
+	return *a.MiddleName
 }
 
-func (act *Actor)GetLastName() string {
-	if act.LastName == nil {
+func (a *Actor) GetLastName() string {
+	if a.LastName == nil {
 		return ""
 	}
 
-	return *act.LastName
+	return *a.LastName
 }
 
-func (act *Actor)FullName() string {
+func (a *Actor) FullName() string {
 	name := ""
-	if act.FirstName != nil {
-		name += *act.FirstName
+	if a.FirstName != nil {
+		name += *a.FirstName
 	}
 
-	if act.MiddleName != nil {
+	if a.MiddleName != nil {
 		if name == "" {
-			name = *act.MiddleName
+			name = *a.MiddleName
 		} else {
-			name += "_" + *act.MiddleName
+			name += "_" + *a.MiddleName
 		}
 	}
 
-	if act.LastName != nil {
+	if a.LastName != nil {
 		if name == "" {
-			name = *act.LastName
+			name = *a.LastName
 		} else {
-			name += "_" + *act.LastName
+			name += "_" + *a.LastName
 		}
 	}
 
 	return name
 }
 
-func (act *Actor)addFile(f *tools.File) {
-	if act.Files == nil {
-		files := make(map[string]tools.File)
-		files[*f.Name()] = *f
-		act.Files = &files
-	} else {
-		(*act.Files)[*f.Name()] = *f
+func (a *Actor) AddMovie(m *Movie) {
+	a.Movies = append(a.Movies, *m)
+}
+
+func (a *Actor) AddFiles(mvs []*Movie) {
+	for _, m := range mvs {
+		a.AddMovie(m)
 	}
 }
 
-func (act *Actor)AddFiles(fls *map[string]tools.File) {
-	if fls == nil {
-		return
+func (a *Actor) IsIn(m *Movie) bool {
+	n := strings.ToLower(*m.Name())
+	isIn := false
+	if a.FirstName != nil {
+		isIn = strings.Contains(n, *a.FirstName)
 	}
 
-	for _, f := range *fls {
-		act.addFile(&f)
+	if isIn && a.MiddleName != nil {
+		isIn = strings.Contains(n, *a.MiddleName)
 	}
+
+	if isIn && a.LastName != nil {
+		isIn = strings.Contains(n, *a.LastName)
+	}
+
+	return isIn
+}
+
+func (a *Actor) AsMap() map[string]interface{} {
+	return structs.Map(a)
 }

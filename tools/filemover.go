@@ -1,14 +1,13 @@
 package tools
 
 import (
-	"os"
 	"github.com/greenac/artemis/logger"
+	"os"
 )
-
 
 type FileMover struct {
 	FromPath FilePath
-	ToPath FilePath
+	ToPath   FilePath
 }
 
 func (fm *FileMover) checkPaths() bool {
@@ -32,4 +31,3 @@ func (fm *FileMover) Move() error {
 
 	return nil
 }
-

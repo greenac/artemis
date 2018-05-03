@@ -7,14 +7,13 @@ type FileNamer struct {
 	File File
 }
 
-func (fn *FileNamer)fileName() *[]byte {
+func (fn *FileNamer) fileName() *[]byte {
 	if !fn.Path.PathDefined() {
 		panic("File Path Not Set")
 	}
 
 	parts := strings.Split(string(fn.Path.Path), "/")
-	name := parts[len(parts) - 1]
+	name := parts[len(parts)-1]
 	rv := []byte(name)
 	return &rv
 }
-

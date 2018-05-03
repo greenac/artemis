@@ -1,11 +1,12 @@
 package movie
 
 import (
-	"github.com/greenac/artemis/tools"
 	"errors"
-	"strings"
-	"regexp"
 	"fmt"
+	"github.com/greenac/artemis/logger"
+	"github.com/greenac/artemis/tools"
+	"regexp"
+	"strings"
 )
 
 func FormatMovieName(f *tools.File) (*[]byte, error) {
@@ -16,8 +17,8 @@ func FormatMovieName(f *tools.File) (*[]byte, error) {
 	ext := ""
 	if IsMovie(f) {
 		parts := strings.Split(name, ".")
-		ext = parts[len(parts) - 1]
-		name = strings.Join(parts[:len(parts) - 1], ".")
+		ext = parts[len(parts)-1]
+		name = strings.Join(parts[:len(parts)-1], ".")
 	}
 
 	re, err := regexp.Compile(`[-\s\t!@#$%^&*()[\]<>,.?~]`)
@@ -37,17 +38,13 @@ func FormatMovieName(f *tools.File) (*[]byte, error) {
 func IsMovie(f *tools.File) bool {
 	mt, err := MovieType(f)
 	if err != nil {
-		if err.Error() == "NotMovie" {
-			return false
-		}
-
-		panic(err)
+		return false
 	}
 
 	return mt != nil
 }
 
-func MovieType(f *tools.File) (*MovieType, error) {
+func MovieType(f *tools.File) (*MovieExt, error) {
 	if f.IsDir() {
 		return nil, errors.New("NotMovie")
 	}
@@ -57,20 +54,15 @@ func MovieType(f *tools.File) (*MovieType, error) {
 		return nil, errors.New("NotMovie")
 	}
 
-	var movType *MovieType = nil
-	mt := parts[len(parts) - 1]
-	for _, t := range *MovieTypes() {
-		if mt == string(t) {
-			movType = &t
-			break
-		}
+	movExt := MovieExt(strings.ToLower(parts[len(parts)-1]))
+	exts := *MovieExtsHash()
+	_, has := exts[movExt]
+	if !has {
+		logger.Error("`MovieType` Unknown movie type:", movExt)
+		return nil, errors.New("UnknownMovieType")
 	}
 
-	if 	movType == nil {
-		return nil, errors.New("NotMovie")
-	}
-
-	return movType, nil
+	return &movExt, nil
 }
 
 func MovieFiles(fh *tools.FileHandler) *[]tools.File {
