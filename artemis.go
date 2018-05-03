@@ -1,51 +1,50 @@
 package main
 
 import (
+	"github.com/greenac/artemis/handlers"
+	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/tools"
+	"sort"
 )
 
 func main() {
-	//dirPaths := [2]string{
-	//	"/Users/andre/Downloads/p/03-27",
-	//	"/Users/andre/Downloads/p/04-13",
-	//}
+	adps := []tools.FilePath{
+		{Path: "/Users/andre/Downloads/pnames"},
+	}
 
-	//dPaths := make([]tools.FilePath, len(dirPaths))
-	//for i, p := range dirPaths {
-	//	var fp tools.FilePath
-	//	fp = tools.FilePath{Path:p}
-	//	dPaths[i] = fp
-	//}
+	afps := []tools.FilePath{
+		{Path: "/Users/andre/Downloads/names.txt"},
+	}
 
-	p := tools.FilePath{Path: "/Users/andre/Downloads/p/03-27"}
-	fh := tools.FileHandler{BasePath: p}
+	mps := []tools.FilePath{
+		{Path: "/Users/andre/Downloads/p/03-27"},
+		{Path: "/Users/andre/Downloads/p/04-13"},
+		{Path: "/Users/andre/Downloads/p/05-03"},
+	}
 
-	//fPaths := make([]tools.FilePath, len(filePaths))
-	//for i, p := range filePaths {
-	//	p := tools.FilePath{Path:p}
-	//	fPaths[i] = p
-	//}
-	//
-	//ah := handlers.ActorHandler{DirPaths: &dPaths, FilePaths: &fPaths}
-	//err := ah.FillActors()
-	//if err == nil {
-	//	logger.Log("Got actors successfully")
-	//	ah.PrintActors()
-	//} else {
-	//	logger.Error("Failed to get actors")
-	//}
-	//
-	//pDirPaths := [1]string{
-	//	"/Users/andre/Downloads/p/01-07",
-	//}
-	//
-	//pPaths := make([]tools.FilePath, len(pDirPaths))
-	//for i, p := range pDirPaths {
-	//	var fp tools.FilePath
-	//	fp = tools.FilePath{Path:p}
-	//	pPaths[i] = fp
-	//}
-	//
-	//mh := handlers.MovieHandler{DirPaths: &pPaths}
-	//mh.GetMovies()
+	ah := handlers.ArtemisHandler{}
+	ah.Setup(&mps, &adps, &afps)
+	ah.Sort()
+	actors := ah.Actors()
+	names := make([]string, len(*actors))
+	i := 0
+	for name := range *actors {
+		names[i] = name
+		i += 1
+	}
+
+	sort.Strings(names)
+
+	for _, n := range names {
+		a := (*actors)[n]
+		logger.Log(a.FullName())
+		for i, m := range a.Movies {
+			logger.Log("\t", i, *m.Name())
+		}
+	}
+
+	logger.Warn("Unknown movies")
+	for i, m := range ah.UnknownMovies {
+		logger.Log(i+1, *m.Name())
+	}
 }

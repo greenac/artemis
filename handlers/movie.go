@@ -1,40 +1,40 @@
 package handlers
 
 import (
-	"github.com/greenac/artemis/tools"
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
-	"fmt"
+	"github.com/greenac/artemis/movie"
+	"github.com/greenac/artemis/tools"
 )
 
 type MovieHandler struct {
 	DirPaths *[]tools.FilePath
-	Movies *[]tools.FilePath
+	Movies   *[]movie.Movie
 }
 
-func (mh *MovieHandler)GetMovies() error {
+func (mh *MovieHandler) SetMovies() error {
 	if mh.DirPaths == nil {
 		logger.Error("Cannot fill movies from dirs. DirPaths not initialized")
 		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
 	}
 
-	fNames := make([][]byte, 0)
+	mvs := make([]movie.Movie, 0)
 	for _, p := range *mh.DirPaths {
-		logger.Log("Files for base path:", p.PathAsString())
+		logger.Log("Movies for base path:", p.PathAsString())
 		fh := tools.FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
-			logger.Warn("Could not fill actors from path:", p.PathAsString())
+			logger.Warn("Could not fill movies from path:", p.PathAsString())
 			continue
 		}
 
-		names := fh.DirFileNames()
-		for _, f := range *names {
-			fmt.Println(string(f))
+		for _, f := range *fh.Files {
+			if movie.IsMovie(&f) {
+				mvs = append(mvs, movie.Movie{File: f})
+			}
 		}
-
-		fNames = append(fNames, *names...)
 	}
 
+	mh.Movies = &mvs
 	return nil
 }

@@ -23,11 +23,11 @@ func GetArtemisError(et ExceptionType, message *string) *ArtemisError {
 	if message == nil {
 		switch et {
 		case ArgsNotInitialized:
-				m = string(ArgsNotInitialized)
+			m = string(ArgsNotInitialized)
 		default:
-			 logger.Warn("No Error of type:", et)
+			logger.Warn("No Error of type:", et)
 		}
-	}  else {
+	} else {
 		m = *message
 	}
 

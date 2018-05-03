@@ -5,15 +5,15 @@ import (
 )
 
 type File struct {
-	Info os.FileInfo
+	Info    os.FileInfo
 	NewName *[]byte
 }
 
-func (f *File)Name() *string {
+func (f *File) Name() *string {
 	n := f.Info.Name()
 	return &n
 }
 
-func (f *File)IsDir() bool {
+func (f *File) IsDir() bool {
 	return f.Info.IsDir()
 }
