@@ -9,7 +9,13 @@ type Actor struct {
 	FirstName  *string
 	LastName   *string
 	MiddleName *string
-	Movies     []Movie
+	Movies     map[string]*Movie
+}
+
+func (a *Actor) setup() {
+	if a.Movies == nil {
+		a.Movies = make(map[string]*Movie, 0)
+	}
 }
 
 func (a *Actor) GetFirstName() string {
@@ -62,7 +68,8 @@ func (a *Actor) FullName() string {
 }
 
 func (a *Actor) AddMovie(m *Movie) {
-	a.Movies = append(a.Movies, *m)
+	a.setup()
+	a.Movies[*m.Name()] = m
 }
 
 func (a *Actor) AddFiles(mvs []*Movie) {

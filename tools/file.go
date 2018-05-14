@@ -6,7 +6,7 @@ import (
 
 type File struct {
 	Info    os.FileInfo
-	NewName *[]byte
+	NewName string
 }
 
 func (f *File) Name() *string {

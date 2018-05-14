@@ -14,13 +14,13 @@ type ArtemisHandler struct {
 
 func (ah *ArtemisHandler) Setup(movieDirPaths *[]tools.FilePath, actorDirPaths *[]tools.FilePath, actorFilePaths *[]tools.FilePath) {
 	if ah.actorHandler == nil {
-		acthand := ActorHandler{DirPaths: actorDirPaths, FilePaths: actorFilePaths}
-		err := acthand.FillActors()
+		actHand := ActorHandler{DirPaths: actorDirPaths, FilePaths: actorFilePaths}
+		err := actHand.FillActors()
 		if err != nil {
 			logger.Error("`ArtemisHandler::Setup` getting actors", err)
 		}
 
-		ah.actorHandler = &acthand
+		ah.actorHandler = &actHand
 	}
 
 	if ah.movieHandler == nil {
