@@ -7,6 +7,7 @@ import (
 	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/tools"
 	"strings"
+  "sort"
 )
 
 type ActorHandler struct {
@@ -116,6 +117,31 @@ func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
 	}
 
 	return a, nil
+}
+
+func (ah *ActorHandler) AddMovie(name string, m *movie.Movie) error {
+	a, has := ah.Actors[name]
+	if !has {
+		logger.Warn("Cannot add movie:", *m.Name(), "to actor:", name, "no actor with that name")
+		return errors.New("ActorNameInvalid")
+	}
+
+	return a.AddMovie(m)
+}
+
+func (ah *ActorHandler) Matches(name string) []*movie.Actor {
+	actors := make([]*movie.Actor, 0)
+	for _, a := range ah.Actors {
+		if a.IsMatch(name) {
+			actors = append(actors, a)
+		}
+	}
+
+	sort.Slice(actors, func(i int, j int) bool {
+	  return actors[i].FullName() > actors[j].FullName()
+  })
+
+	return actors
 }
 
 func (ah *ActorHandler) PrintActors() {

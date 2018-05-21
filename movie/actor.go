@@ -1,7 +1,9 @@
 package movie
 
 import (
+	"errors"
 	"github.com/fatih/structs"
+	"github.com/greenac/artemis/logger"
 	"strings"
 )
 
@@ -67,9 +69,16 @@ func (a *Actor) FullName() string {
 	return name
 }
 
-func (a *Actor) AddMovie(m *Movie) {
+func (a *Actor) AddMovie(m *Movie) error {
 	a.setup()
+	_, has := a.Movies[*m.Name()]
+	if has {
+		logger.Warn("Can't add movie:", *m.Name(), "The actor already has a movie of that name")
+		return errors.New("DuplicateMovieName")
+	}
+
 	a.Movies[*m.Name()] = m
+	return nil
 }
 
 func (a *Actor) AddFiles(mvs []*Movie) {
@@ -98,4 +107,13 @@ func (a *Actor) IsIn(m *Movie) bool {
 
 func (a *Actor) AsMap() map[string]interface{} {
 	return structs.Map(a)
+}
+
+func (a *Actor) FormatName(name string) string {
+	return strings.ToLower(strings.Replace(name, " ", "_", -1))
+}
+
+func (a *Actor) IsMatch(name string) bool {
+	fmtName := a.FormatName(name)
+	return strings.Contains(strings.ToLower(a.FullName()), fmtName)
 }
