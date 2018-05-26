@@ -7,7 +7,8 @@ import (
 
 func main() {
 	adps := []tools.FilePath{
-		{Path: "/Users/andre/Downloads/pnames"},
+		//{Path: "/Users/andre/Downloads/pnames"},
+		{Path: "/Volumes/Papa/.p"},
 	}
 
 	afps := []tools.FilePath{

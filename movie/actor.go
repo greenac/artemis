@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+type NamePart string
+
+const (
+	FirstName  NamePart = "firstName"
+	MiddleName NamePart = "middleName"
+	LastName   NamePart = "lastName"
+)
+
 type Actor struct {
 	FirstName  *string
 	LastName   *string
@@ -66,7 +74,7 @@ func (a *Actor) FullName() string {
 		}
 	}
 
-	return name
+	return strings.ToLower(name)
 }
 
 func (a *Actor) AddMovie(m *Movie) error {
@@ -116,4 +124,51 @@ func (a *Actor) FormatName(name string) string {
 func (a *Actor) IsMatch(name string) bool {
 	fmtName := a.FormatName(name)
 	return strings.Contains(strings.ToLower(a.FullName()), fmtName)
+}
+
+func (a *Actor) MatchPartial(pName string, np NamePart) bool {
+	match := true
+	name := ""
+
+	switch np {
+	case FirstName:
+		match = len(pName) <= len(*a.FirstName)
+		name = strings.ToLower(*a.FirstName)
+	case MiddleName:
+		match = len(pName) <= len(*a.MiddleName)
+		name = strings.ToLower(*a.MiddleName)
+	case LastName:
+		match = len(pName) <= len(*a.LastName)
+		name = strings.ToLower(*a.LastName)
+	}
+
+	if !match {
+		return match
+	}
+
+	for i, c := range name {
+		if byte(c) != name[i] {
+			match = false
+			break
+		}
+	}
+
+	return match
+}
+
+func (a *Actor) MatchWhole(frag string) bool {
+	n := a.FullName()
+	if len(frag) > len(n) {
+		return false
+	}
+
+	match := true
+	for i, c := range frag {
+		if byte(c) != n[i] {
+			match = false
+			break
+		}
+	}
+
+	return match
 }

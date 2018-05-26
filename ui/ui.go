@@ -30,7 +30,7 @@ type Handler struct {
 	Kickoff     func()
 	AfterReturn func()
 	Tab         func()
-	KeyPress func()
+	KeyPress    func()
 }
 
 func (uih *Handler) Setup() {
@@ -143,15 +143,15 @@ func (uih *Handler) currentLine() *Line {
 		l.Y = uih.CursorPosY
 		uih.addLine(l, uih.Section)
 	} else {
-		l = (*ls)[uih.CursorPosY-len(*(uih.GetLines(Header))) + 1]
+		l = (*ls)[uih.CursorPosY-len(*(uih.GetLines(Header)))+1]
 	}
 
 	return l
 }
 
 func (uih *Handler) addLine(l *Line, c Container) {
-  ls := uih.GetLines(c)
-  *ls = append(*ls, l)
+	ls := uih.GetLines(c)
+	*ls = append(*ls, l)
 	uih.lines[c] = *ls
 }
 
@@ -277,7 +277,7 @@ func (uih *Handler) handleSpace() {
 }
 
 func (uih *Handler) tab() {
-  if uih.Tab != nil {
+	if uih.Tab != nil {
 		uih.Tab()
 		uih.Flush()
 		return
@@ -315,8 +315,8 @@ func (uih *Handler) keyPress(ch rune) {
 	uih.setCursorPosition()
 
 	if uih.KeyPress != nil {
-	  uih.KeyPress()
-  }
+		uih.KeyPress()
+	}
 
 	termbox.Flush()
 }
@@ -331,7 +331,7 @@ func (uih *Handler) Print(l *Line) {
 
 func (uih *Handler) DrawAll() {
 
-  uih.SiftLines()
+	uih.SiftLines()
 	for _, cnt := range uih.orderedContainers() {
 		for _, l := range *uih.GetLines(cnt) {
 			uih.Print(l)
@@ -342,26 +342,26 @@ func (uih *Handler) DrawAll() {
 }
 
 func (uih *Handler) Draw(c Container) {
-  uih.SiftLines()
-  for _, l := range *uih.GetLines(c) {
-    uih.Print(l)
-  }
+	uih.SiftLines()
+	for _, l := range *uih.GetLines(c) {
+		uih.Print(l)
+	}
 
-  uih.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) orderedContainers() []Container {
-  return []Container{Header, Body, Input, Footer}
+	return []Container{Header, Body, Input, Footer}
 }
 
 func (uih *Handler) SiftLines() {
-  y := 0
-  for _, c := range uih.orderedContainers() {
-    for _, l := range *(uih.GetLines(c)) {
-      l.Y = y
-      y += 1
-    }
-  }
+	y := 0
+	for _, c := range uih.orderedContainers() {
+		for _, l := range *(uih.GetLines(c)) {
+			l.Y = y
+			y += 1
+		}
+	}
 }
 
 func (uih *Handler) Flush() {
@@ -369,11 +369,11 @@ func (uih *Handler) Flush() {
 }
 
 func (uih *Handler) Clear(c Container) {
-  ls := uih.GetLines(c)
-  for _, l := range *ls {
-    l.Text = make([]rune, 0)
-    uih.Print(l)
-  }
+	ls := uih.GetLines(c)
+	for _, l := range *ls {
+		l.Text = make([]rune, 0)
+		uih.Print(l)
+	}
 
 	uih.lines[c] = make([]*Line, 0)
 }
@@ -386,8 +386,8 @@ func (uih *Handler) ClearAll() {
 }
 
 func (uih *Handler) ClearUI() {
-  termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-  uih.DrawAll()
+	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	uih.DrawAll()
 }
 
 func (uih *Handler) SetHeader(txts []string, updateCursor bool) {
@@ -413,6 +413,10 @@ func (uih *Handler) SetHeader(txts []string, updateCursor bool) {
 	}
 
 	uih.Flush()
+}
+
+func (uih *Handler) Debug(a ...interface{}) {
+	debug(a)
 }
 
 var dStart = 15
