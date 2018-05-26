@@ -6,8 +6,8 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/tools"
+	"sort"
 	"strings"
-  "sort"
 )
 
 type ActorHandler struct {
@@ -53,7 +53,7 @@ func (ah *ActorHandler) FillActorsFromFiles() error {
 			continue
 		}
 
-		ah.Actors[string(n)] = &a
+		ah.Actors[a.FullName()] = &a
 	}
 
 	return nil
@@ -138,10 +138,51 @@ func (ah *ActorHandler) Matches(name string) []*movie.Actor {
 	}
 
 	sort.Slice(actors, func(i int, j int) bool {
-	  return actors[i].FullName() > actors[j].FullName()
-  })
+		return actors[i].FullName() < actors[j].FullName()
+	})
 
 	return actors
+}
+
+func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common string) {
+	acts := make([]*movie.Actor, 0)
+	n := strings.ToLower(strings.Replace(name, " ", "_", -1))
+	for _, a := range ah.Actors {
+		if a.MatchWhole(n) {
+			acts = append(acts, a)
+		}
+	}
+
+	sort.Slice(acts, func(i int, j int) bool {
+		return acts[i].FullName() < acts[j].FullName()
+	})
+
+	comp := make([]rune, 0)
+	if len(acts) == 1 {
+		comp = []rune(acts[0].FullName())
+	} else if len(acts) > 1 {
+		actor := acts[0]
+		actName := actor.FullName()
+		for i, c := range actName {
+			add := true
+			for j := 1; j < len(acts); j += 1 {
+				a := acts[j]
+				aName := a.FullName()
+				if i >= len(aName) || byte(c) != aName[i] {
+					add = false
+					break
+				}
+			}
+
+			if !add {
+				break
+			}
+
+			comp = append(comp, c)
+		}
+	}
+
+	return acts, string(comp)
 }
 
 func (ah *ActorHandler) PrintActors() {

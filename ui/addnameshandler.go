@@ -49,22 +49,22 @@ func (anh *AddNamesHandler) showComplete() {
 }
 
 func (anh *AddNamesHandler) onKeyPress() {
-  txt := make([]rune, 0)
-  lns := anh.uiHandler.GetLines(Body)
-  for _, l := range *lns {
-    txt = append(txt, l.Text...)
-  }
+	txt := make([]rune, 0)
+	lns := anh.uiHandler.GetLines(Body)
+	for _, l := range *lns {
+		txt = append(txt, l.Text...)
+	}
 
-  matches := anh.artemisHandler.ActorHandler.Matches(string(txt))
-  acts := ""
-  for i, a := range matches {
-    acts += a.FullName()
-    if i < len(matches) - 1 {
-      acts += ", "
-    }
-  }
+	matches := anh.artemisHandler.ActorHandler.Matches(string(txt))
+	acts := ""
+	for i, a := range matches {
+		acts += a.FullName()
+		if i < len(matches)-1 {
+			acts += ", "
+		}
+	}
 
-  anh.uiHandler.Draw(Footer)
+	anh.uiHandler.Draw(Footer)
 }
 
 func (anh *AddNamesHandler) readInput() {
@@ -91,10 +91,11 @@ func (anh *AddNamesHandler) handleTab() {
 
 	pts := strings.Split(string(txt), ",")
 	name := strings.Trim(pts[len(pts)-1], " ")
-	matches := anh.artemisHandler.ActorHandler.Matches(name)
+	matches, common := anh.artemisHandler.ActorHandler.NameMatches(name)
 	names := ""
 	for i, actor := range matches {
-		names += actor.FullName()
+		n := actor.FullName()
+		names += n
 		if i < len(matches)-1 {
 			names += ", "
 		}
@@ -104,5 +105,8 @@ func (anh *AddNamesHandler) handleTab() {
 	anh.uiHandler.AddToFooter(names)
 	anh.uiHandler.ClearUI()
 	anh.uiHandler.DrawAll()
+	anh.uiHandler.Flush()
+
+	anh.uiHandler.Debug("longest name:", common)
 	anh.uiHandler.Flush()
 }
