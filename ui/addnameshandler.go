@@ -13,6 +13,7 @@ type AddNamesHandler struct {
 	unkIndex       int
 	numUpdated     int
 	inputStart     int
+	addNames       []string
 }
 
 func (anh *AddNamesHandler) Setup(movDirPaths *[]tools.FilePath, actDirPaths *[]tools.FilePath, actFilePaths *[]tools.FilePath) {
@@ -31,6 +32,9 @@ func (anh *AddNamesHandler) Run() {
 }
 
 func (anh *AddNamesHandler) ShowUnknown() {
+  anh.uiHandler.ClearAll()
+  anh.uiHandler.ClearUI()
+
 	if anh.unkIndex == len(anh.artemisHandler.UnknownMovies) {
 		anh.showComplete()
 		return
@@ -49,64 +53,101 @@ func (anh *AddNamesHandler) showComplete() {
 }
 
 func (anh *AddNamesHandler) onKeyPress() {
-	txt := make([]rune, 0)
-	lns := anh.uiHandler.GetLines(Body)
-	for _, l := range *lns {
-		txt = append(txt, l.Text...)
-	}
+  if anh.uiHandler.Section == Input {
+    txt := make([]rune, 0)
+    lns := anh.uiHandler.GetLines(Input)
+    for _, l := range *lns {
+      txt = append(txt, l.Text...)
+    }
 
-	matches := anh.artemisHandler.ActorHandler.Matches(string(txt))
-	acts := ""
-	for i, a := range matches {
-		acts += a.FullName()
-		if i < len(matches)-1 {
-			acts += ", "
-		}
-	}
+    txtStr := strings.ToLower(string(txt))
+    if txtStr == "y" || txtStr == "yes" {
+      m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
+      for _, n := range anh.addNames {
+        err := anh.artemisHandler.ActorHandler.AddMovie(n, &m); if err != nil {
+          anh.uiHandler.Debug("Cannot add movie", m.Name(), "To actor:", n, "error:", err)
+          continue
+        }
 
-	anh.uiHandler.Draw(Footer)
+        anh.uiHandler.Debug("Adding:", m.Name(), "to actor:", n)
+      }
+    }
+
+    anh.unkIndex += 1
+    anh.ShowUnknown()
+  }
 }
 
 func (anh *AddNamesHandler) readInput() {
-	txt := make([]rune, 0)
-	lns := anh.uiHandler.GetLines(Body)
-	for _, l := range *lns {
-		txt = append(txt, l.Text...)
-	}
+  if anh.uiHandler.Section == Body {
+    txt := make([]rune, 0)
+    lns := anh.uiHandler.GetLines(Body)
+    for _, l := range *lns {
+      txt = append(txt, l.Text...)
+    }
 
-	anh.uiHandler.Clear(Body)
-	anh.uiHandler.Clear(Footer)
-	anh.uiHandler.Section = Input
-	//anh.uiHandler.AddToInput(fmt.Sprint("Add value:", " some value"))
-	anh.uiHandler.AddToFooter(fmt.Sprint("got text: ", string(txt)))
-	anh.uiHandler.DrawAll()
+    names := make([]string, 0)
+    for _, n := range strings.Split(string(txt), ",") {
+      names = append(names, strings.Trim(n, " "))
+    }
+
+    anh.addNames = names
+    anh.uiHandler.Clear(Body)
+    anh.uiHandler.Clear(Input)
+    anh.uiHandler.Clear(Footer)
+    anh.uiHandler.ClearUI()
+    m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
+    ftTxt := fmt.Sprint("Add name(s) ", string(txt), " to: ", *m.Name(), " (Y/N)?")
+    anh.uiHandler.AddToBody(ftTxt)
+    anh.uiHandler.CursorPosX = 0
+    anh.uiHandler.CursorPosY += 1
+    anh.uiHandler.SetCursorPosition()
+    anh.uiHandler.Section = Input
+    anh.uiHandler.ContIndex = 0
+    anh.uiHandler.AddToInput("")
+    anh.uiHandler.DrawAll()
+  } else if anh.uiHandler.Section == Input {
+    anh.uiHandler.Clear(Input)
+    anh.uiHandler.SiftLines()
+    anh.uiHandler.CursorPosX = 0
+    anh.uiHandler.AddToFooter(fmt.Sprint("going to write: ", strings.Join(anh.addNames, ", "), " length:", len(anh.addNames)))
+    anh.uiHandler.DrawAll()
+  }
 }
 
 func (anh *AddNamesHandler) handleTab() {
-	txt := make([]rune, 0)
-	lns := anh.uiHandler.GetLines(Body)
-	for _, l := range *lns {
-		txt = append(txt, l.Text...)
-	}
+  txt := make([]rune, 0)
+  lns := anh.uiHandler.GetLines(Body)
+  for _, l := range *lns {
+    txt = append(txt, l.Text...)
+  }
 
-	pts := strings.Split(string(txt), ",")
-	name := strings.Trim(pts[len(pts)-1], " ")
-	matches, common := anh.artemisHandler.ActorHandler.NameMatches(name)
-	names := ""
-	for i, actor := range matches {
-		n := actor.FullName()
-		names += n
-		if i < len(matches)-1 {
-			names += ", "
-		}
-	}
+  pts := strings.Split(string(txt), ",")
+  name := strings.ToLower(strings.Trim(pts[len(pts)-1], " "))
+  matches, common := anh.artemisHandler.ActorHandler.NameMatches(name)
+  names := ""
+  for i, actor := range matches {
+    n := actor.FullName()
+    names += n
+    if i < len(matches)-1 {
+      names += ", "
+    }
+  }
 
-	anh.uiHandler.Clear(Footer)
-	anh.uiHandler.AddToFooter(names)
-	anh.uiHandler.ClearUI()
-	anh.uiHandler.DrawAll()
-	anh.uiHandler.Flush()
+  if common != "" && common != name && len(common) > len(name) {
+    for i, pt := range pts {
+      pts[i] = strings.Trim(pt, " ")
+    }
 
-	anh.uiHandler.Debug("longest name:", common)
-	anh.uiHandler.Flush()
+    pts[len(pts)-1] = common
+    l := strings.Join(pts, ", ")
+    anh.uiHandler.ReplaceLastLine(l, Body)
+    anh.uiHandler.CursorPosX = len(l)
+    anh.uiHandler.SetCursorPosition()
+  }
+
+  anh.uiHandler.Clear(Footer)
+  anh.uiHandler.AddToFooter(names)
+  anh.uiHandler.DrawAll()
+  anh.uiHandler.Flush()
 }

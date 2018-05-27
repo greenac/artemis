@@ -8,6 +8,8 @@ import (
 	"github.com/greenac/artemis/tools"
 	"sort"
 	"strings"
+	"encoding/json"
+	"io/ioutil"
 )
 
 type ActorHandler struct {
@@ -23,6 +25,10 @@ func (ah *ActorHandler) FillActors() error {
 	}
 
 	if err := ah.FillActorsFromFiles(); err != nil {
+		return err
+	}
+
+	if err := ah.fillActorsFromDummyFile(); err != nil {
 		return err
 	}
 
@@ -91,6 +97,32 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 	return nil
 }
 
+func (ah *ActorHandler) fillActorsFromDummyFile() error {
+	// Remove me
+	data, err := ioutil.ReadFile("/Users/andre/Desktop/names.json"); if err != nil {
+		logger.Error("Failed to read temp names file with error:", err)
+		return err
+	}
+
+	names := make([]string, 0)
+	err = json.Unmarshal(data, &names); if err != nil {
+		logger.Error("Failed to unmarshal Dummy json file with error:", err)
+		return err
+	}
+
+	for _, n := range names {
+		nb := []byte(n)
+		a, err := ah.createActor(&nb)
+		if err != nil {
+			continue
+		}
+
+		ah.Actors[a.FullName()] = &a
+	}
+
+	return nil
+}
+
 func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
 	if name == nil || len(*name) == 0 {
 		logger.Error("Cannot create actor from name:", name)
@@ -120,9 +152,10 @@ func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
 }
 
 func (ah *ActorHandler) AddMovie(name string, m *movie.Movie) error {
-	a, has := ah.Actors[name]
+	n := strings.Replace(strings.Trim(strings.ToLower(name), " "), " ", "_", -1)
+	a, has := ah.Actors[n]
 	if !has {
-		logger.Warn("Cannot add movie:", *m.Name(), "to actor:", name, "no actor with that name")
+		logger.Warn("Cannot add movie:", *m.Name(), "to actor:", n, "no actor with that name")
 		return errors.New("ActorNameInvalid")
 	}
 
@@ -183,6 +216,14 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common 
 	}
 
 	return acts, string(comp)
+}
+
+func (ah *ActorHandler) AddNameToMovies() {
+	for _, a := range ah.Actors {
+		for _, m := range a.Movies {
+			m.Rename(a)
+		}
+	}
 }
 
 func (ah *ActorHandler) PrintActors() {
