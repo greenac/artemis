@@ -25,6 +25,7 @@ type Handler struct {
 	debugLine   *Line
 	CursorPosX  int
 	CursorPosY  int
+	ContIndex   int
 	run         bool
 	Section     Container
 	Kickoff     func()
@@ -143,7 +144,7 @@ func (uih *Handler) currentLine() *Line {
 		l.Y = uih.CursorPosY
 		uih.addLine(l, uih.Section)
 	} else {
-		l = (*ls)[uih.CursorPosY-len(*(uih.GetLines(Header)))+1]
+		l = (*ls)[uih.ContIndex]
 	}
 
 	return l
@@ -195,7 +196,7 @@ func (uih *Handler) arrowLeft() {
 	}
 
 	uih.CursorPosX -= 1
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -207,7 +208,7 @@ func (uih *Handler) arrowRight() {
 	}
 
 	uih.CursorPosX += 1
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -218,12 +219,13 @@ func (uih *Handler) arrowUp() {
 	}
 
 	uih.CursorPosY -= 1
+	uih.ContIndex -= 1
 	l := uih.currentLine()
 	if uih.CursorPosX > len(l.Text) {
 		uih.CursorPosX = len(l.Text)
 	}
 
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -234,16 +236,17 @@ func (uih *Handler) arrowDown() {
 	}
 
 	uih.CursorPosY += 1
+	uih.ContIndex += 1
 	l := uih.currentLine()
 	if uih.CursorPosX > len(l.Text) {
 		uih.CursorPosX = len(l.Text)
 	}
 
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
-func (uih *Handler) setCursorPosition() {
+func (uih *Handler) SetCursorPosition() {
 	termbox.SetCursor(uih.CursorPosX, uih.CursorPosY)
 }
 
@@ -259,11 +262,12 @@ func (uih *Handler) handleReturn() {
 func (uih *Handler) AddBlankLine(c Container) {
 	uih.CursorPosX = 0
 	uih.CursorPosY += 1
+  uih.ContIndex += 1
 
 	l := uih.newLine(c)
 	l.Y = uih.CursorPosY
 	uih.addLine(l, c)
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -272,7 +276,7 @@ func (uih *Handler) handleSpace() {
 	l.addText(' ', uih.CursorPosX)
 	uih.Print(l)
 	uih.CursorPosX += 1
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -303,7 +307,7 @@ func (uih *Handler) backspace() {
 	l.removeText(uih.CursorPosX)
 	uih.Print(l)
 	uih.CursorPosX -= 1
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
 	termbox.Flush()
 }
 
@@ -312,7 +316,8 @@ func (uih *Handler) keyPress(ch rune) {
 	l.addText(ch, uih.CursorPosX)
 	uih.Print(l)
 	uih.CursorPosX += 1
-	uih.setCursorPosition()
+	uih.SetCursorPosition()
+  uih.SiftLines()
 
 	if uih.KeyPress != nil {
 		uih.KeyPress()
@@ -330,7 +335,7 @@ func (uih *Handler) Print(l *Line) {
 }
 
 func (uih *Handler) DrawAll() {
-
+  uih.ClearUI()
 	uih.SiftLines()
 	for _, cnt := range uih.orderedContainers() {
 		for _, l := range *uih.GetLines(cnt) {
@@ -375,6 +380,10 @@ func (uih *Handler) Clear(c Container) {
 		uih.Print(l)
 	}
 
+	if c == uih.Section {
+	  uih.ContIndex = 0
+  }
+
 	uih.lines[c] = make([]*Line, 0)
 }
 
@@ -387,7 +396,6 @@ func (uih *Handler) ClearAll() {
 
 func (uih *Handler) ClearUI() {
 	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-	uih.DrawAll()
 }
 
 func (uih *Handler) SetHeader(txts []string, updateCursor bool) {
@@ -407,12 +415,24 @@ func (uih *Handler) SetHeader(txts []string, updateCursor bool) {
 	}
 
 	if updateCursor {
-		uih.CursorPosY = len(txts) - 1
+		uih.CursorPosY = len(txts)
 		uih.AddBlankLine(Header)
-		uih.AddBlankLine(Header)
-	}
+    uih.AddBlankLine(Header)
+    uih.ContIndex = 0
+  }
 
+	uih.SiftLines()
 	uih.Flush()
+}
+
+func (uih *Handler) ReplaceLastLine(txt string, c Container) {
+  ls := uih.GetLines(c)
+  if len(*ls) == 0 {
+    return
+  }
+
+  l := (*ls)[len(*ls)-1]
+  l.Text = []rune(txt)
 }
 
 func (uih *Handler) Debug(a ...interface{}) {
