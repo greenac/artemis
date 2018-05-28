@@ -105,3 +105,16 @@ func (fh *FileHandler) ReadNameFile(p *FilePath) (*[][]byte, error) {
 
 	return &names, nil
 }
+
+func (fh *FileHandler) Rename(oldName, newName string) error {
+	_, err :=  os.Stat(newName); if err != nil {
+		if os.IsNotExist(err) {
+			os.Rename(oldName, newName)
+			return nil
+		}
+
+		return err
+	}
+
+	return nil
+}

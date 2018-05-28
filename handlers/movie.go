@@ -5,6 +5,7 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/tools"
+	"path"
 )
 
 type MovieHandler struct {
@@ -30,11 +31,27 @@ func (mh *MovieHandler) SetMovies() error {
 
 		for _, f := range *fh.Files {
 			if movie.IsMovie(&f) {
-				mvs = append(mvs, movie.Movie{File: f})
+				m :=  movie.Movie{File: f}
+				m.Path = path.Join(p.Path, *m.Name())
+				mvs = append(mvs, m)
 			}
 		}
 	}
 
 	mh.Movies = &mvs
 	return nil
+}
+
+func (mh *MovieHandler) RenameMovies(mvs []*movie.Movie) {
+	for _, m := range mvs {
+		if m.Path == "" {
+			logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "does not have path set")
+			continue
+		}
+
+		fh := tools.FileHandler{}
+		err := fh.Rename(m.Path, m.GetNewName()); if err != nil {
+			logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
+		}
+	}
 }

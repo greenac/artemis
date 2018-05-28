@@ -5,8 +5,10 @@ import (
 )
 
 type File struct {
+	Path string
 	Info    os.FileInfo
 	NewName string
+	NewPath string
 }
 
 func (f *File) Name() *string {
