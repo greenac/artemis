@@ -10,12 +10,15 @@ import (
 	"strings"
 	"encoding/json"
 	"io/ioutil"
+	"path"
+	"os"
 )
 
 type ActorHandler struct {
 	DirPaths  *[]tools.FilePath
 	FilePaths *[]tools.FilePath
 	Actors    map[string]*movie.Actor
+	ToPath    string
 }
 
 func (ah *ActorHandler) FillActors() error {
@@ -220,8 +223,34 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common 
 
 func (ah *ActorHandler) AddNameToMovies() {
 	for _, a := range ah.Actors {
+		n := a.FullName()
 		for _, m := range a.Movies {
-			m.Rename(a)
+			m.AddName(n)
+		}
+	}
+}
+
+func (ah *ActorHandler) MoveMovies() {
+	for _, a := range ah.Actors {
+		ap := path.Join(ah.ToPath, a.FullName())
+		fi, err := os.Stat(ap)
+		if err != nil && os.IsNotExist(err) {
+			os.Mkdir(ap, 0644)
+		} else if err != nil {
+			logger.Error("`ActorHandler::MoveMovies` error checking file:", err)
+			continue
+		} else if !fi.IsDir() {
+			logger.Error("`ActorHandler::MoveMovies` File at path:", ap, "is not a directory")
+			continue
+		}
+
+		for _, m := range a.Movies {
+			if m.NewPath == "" {
+				m.NewPath = path.Join(ap, m.GetNewName())
+				os.Rename(m.Path, m.NewPath)
+			} else {
+				os.Symlink(m.NewPath, path.Join(ap, m.GetNewName()))
+			}
 		}
 	}
 }

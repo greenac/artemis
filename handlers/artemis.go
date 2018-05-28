@@ -20,22 +20,6 @@ func (ah *ArtemisHandler) Setup(movieDirPaths *[]tools.FilePath, actorDirPaths *
 			logger.Error("`ArtemisHandler::Setup` getting actors", err)
 		}
 
-    //acts := make([]string, 0)
-    //for _, a := range actHand.Actors {
-    //  logger.Log("adding actor:", a.FullName())
-    //  acts = append(acts, a.FullName())
-    //}
-    //
-    //result, err := json.Marshal(&acts); if err != nil {
-    //  logger.Log("Could not convert to json:", err)
-    //  return
-    //}
-    //
-    //err = ioutil.WriteFile("/Users/andre/Desktop/names.json", result, 0644)
-    //if err != nil {
-    //  logger.Log("Failed to write with error:", err)
-    //}
-
 		ah.ActorHandler = &actHand
 	}
 
@@ -74,4 +58,15 @@ func (ah *ArtemisHandler) AddMovie(names string, movie *movie.Movie) {
 	//parts := strings.Split(names, ",")
 	//
 	//ah.actorHandler.AddMovie(name, movie)
+}
+
+func (ah *ArtemisHandler) RenameMovies() {
+	for _, a := range ah.ActorHandler.Actors {
+		mvs := make([]*movie.Movie, 0)
+		for _, m := range a.Movies {
+			mvs = append(mvs, m)
+		}
+
+		ah.MovieHandler.RenameMovies(mvs)
+	}
 }
