@@ -12,9 +12,20 @@ type ArtemisHandler struct {
 	UnknownMovies []movie.Movie
 }
 
-func (ah *ArtemisHandler) Setup(movieDirPaths *[]tools.FilePath, actorDirPaths *[]tools.FilePath, actorFilePaths *[]tools.FilePath) {
+func (ah *ArtemisHandler) Setup(
+	movieDirPaths *[]tools.FilePath,
+	actorDirPaths *[]tools.FilePath,
+	actorFilePath *tools.FilePath,
+	cachedNamePath *tools.FilePath,
+	toPath *tools.FilePath,
+) {
 	if ah.ActorHandler == nil {
-		actHand := ActorHandler{DirPaths: actorDirPaths, FilePaths: actorFilePaths}
+		actHand := ActorHandler{
+			DirPaths: actorDirPaths,
+			NamesPath: actorFilePath,
+			CachedPath: cachedNamePath,
+			ToPath: toPath,
+		}
 		err := actHand.FillActors()
 		if err != nil {
 			logger.Error("`ArtemisHandler::Setup` getting actors", err)
@@ -62,6 +73,10 @@ func (ah *ArtemisHandler) AddMovie(names string, movie *movie.Movie) {
 
 func (ah *ArtemisHandler) RenameMovies() {
 	for _, a := range ah.ActorHandler.Actors {
+		if len(a.Movies) == 0 {
+			continue
+		}
+
 		mvs := make([]*movie.Movie, 0)
 		for _, m := range a.Movies {
 			mvs = append(mvs, m)

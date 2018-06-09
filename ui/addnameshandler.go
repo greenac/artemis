@@ -16,13 +16,20 @@ type AddNamesHandler struct {
 	addNames       []string
 }
 
-func (anh *AddNamesHandler) Setup(movDirPaths *[]tools.FilePath, actDirPaths *[]tools.FilePath, actFilePaths *[]tools.FilePath) {
-	anh.artemisHandler.Setup(movDirPaths, actDirPaths, actFilePaths)
+func (anh *AddNamesHandler) Setup(
+	movDirPaths *[]tools.FilePath,
+	actDirPaths *[]tools.FilePath,
+	actFilePath *tools.FilePath,
+	cachedNamePath *tools.FilePath,
+	toPath *tools.FilePath,
+) {
+	anh.artemisHandler.Setup(movDirPaths, actDirPaths, actFilePath, cachedNamePath, toPath)
 	anh.uiHandler.Setup()
 	anh.uiHandler.Kickoff = anh.ShowUnknown
 	anh.uiHandler.KeyPress = anh.onKeyPress
 	anh.uiHandler.AfterReturn = anh.readInput
 	anh.uiHandler.Tab = anh.handleTab
+	anh.uiHandler.Escape = anh.AddNamesToMovies
 }
 
 func (anh *AddNamesHandler) Run() {
@@ -150,4 +157,8 @@ func (anh *AddNamesHandler) handleTab() {
   anh.uiHandler.AddToFooter(names)
   anh.uiHandler.DrawAll()
   anh.uiHandler.Flush()
+}
+
+func (anh *AddNamesHandler) AddNamesToMovies() {
+	anh.artemisHandler.RenameMovies()
 }
