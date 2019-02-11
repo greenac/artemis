@@ -3,53 +3,83 @@ package main
 import (
 	"github.com/greenac/artemis/tools"
 	"github.com/greenac/artemis/ui"
+	"github.com/joho/godotenv"
+	"github.com/greenac/artemis/logger"
+	"os"
+	"io/ioutil"
+	"encoding/json"
+	"reflect"
 )
 
 func main() {
-	adps := []tools.FilePath{
-		//{Path: "/Users/andre/Downloads/pnames"},
-		{Path: "/Volumes/Papa/.p"},
+	err := godotenv.Load(); if err != nil {
+		logger.Error("Error loading .env file:", err)
 	}
 
-	afps := []tools.FilePath{
-		{Path: "/Users/andre/Downloads/names.txt"},
+	cp := os.Getenv("CONFIG_PATH")
+	if cp == "" {
+		logger.Error("No config path set")
+		panic("NO_CONFIG_PATH")
 	}
 
-	mps := []tools.FilePath{
-		{Path: "/Users/andre/Downloads/p/04-13"},
-		{Path: "/Users/andre/Downloads/p/05-03"},
-		{Path: "/Users/andre/Downloads/p/05-12"},
+	data, err := ioutil.ReadFile(cp); if err != nil {
+		logger.Error("Failed to config file")
+		panic(err)
+	}
+
+	config := make(map[string]interface{}, 0)
+	err = json.Unmarshal(data, &config); if err != nil {
+		logger.Error("failed to unmarshal config file json")
+		panic(err)
+	}
+
+	logger.Log("Got config:", reflect.TypeOf(config["targetDirs"]))
+	is := config["targetDirs"].([]interface{})
+	for t, d := range is {
+		logger.Log(t, d)
+	}
+
+	targs, has := config["targetDirs"].([]interface{}); if !has {
+		logger.Error("No target directories in config")
+		panic("INVALID_CONFIG")
+	}
+
+	acts, has := config["actorDirs"].([]interface{}); if !has {
+		logger.Error("No actor directories in config")
+		panic("INVALID_CONFIG")
+	}
+
+	anfp, has := config["actorNamesFile"].(string); if !has {
+		logger.Error("No actor names file path in config")
+		panic("INVALID_CONFIG")
+	}
+
+	cnfp, has := config["cachedNamesFile"].(string); if !has {
+		logger.Error("No cached names file path in config")
+		panic("INVALID_CONFIG")
+	}
+
+	sdfp, has := config["stagingDir"].(string); if !has {
+		logger.Error("No cached names file path in config")
+		panic("INVALID_CONFIG")
+	}
+
+	actNameFile := tools.FilePath{Path: anfp}
+	cachedPath := tools.FilePath{Path: cnfp}
+	stagingPath := tools.FilePath{Path: sdfp}
+
+	targetPaths := make([]tools.FilePath, len(targs))
+	actorPaths := make([]tools.FilePath, len(acts))
+
+	for i, p := range targs {
+		targetPaths[i] = tools.FilePath{Path: p.(string)}
+	}
+
+	for i, p := range acts {
+		actorPaths[i] = tools.FilePath{Path: p.(string)}
 	}
 
 	anh := ui.AddNamesHandler{}
-	anh.Setup(&mps, &adps, &afps)
+	anh.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
 	anh.Run()
-
-	//ah := handlers.ArtemisHandler{}
-	//ah.Setup(&mps, &adps, &afps)
-	//ah.Sort()
-	//actors := ah.Actors()
-	//names := make([]string, len(*actors))
-	//i := 0
-	//for name := range *actors {
-	//  names[i] = name
-	//  i += 1
-	//}
-	//
-	//sort.Strings(names)
-
-	//for _, n := range names {
-	//  a := (*actors)[n]
-	//  logger.Log(a.FullName())
-	//  i := 1
-	//  for k, m := range a.Movies {
-	//    logger.Log("\t", i, k, *m.Name())
-	//    i += 1
-	//  }
-	//}
-
-	//logger.Warn("Unknown movies")
-	//for i, m := range ah.UnknownMovies {
-	// logger.Log(i + 1, *m.Name())
-	//}
 }

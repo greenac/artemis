@@ -16,9 +16,10 @@ import (
 
 type ActorHandler struct {
 	DirPaths  *[]tools.FilePath
-	FilePaths *[]tools.FilePath
+	NamesPath *tools.FilePath
+	CachedPath *tools.FilePath
 	Actors    map[string]*movie.Actor
-	ToPath    string
+	ToPath    *tools.FilePath
 }
 
 func (ah *ActorHandler) FillActors() error {
@@ -27,35 +28,31 @@ func (ah *ActorHandler) FillActors() error {
 		return err
 	}
 
-	if err := ah.FillActorsFromFiles(); err != nil {
+	if err := ah.FillActorsFromFile(); err != nil {
 		return err
 	}
 
-	if err := ah.fillActorsFromDummyFile(); err != nil {
+	if err := ah.fillActorsFromCachedFile(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (ah *ActorHandler) FillActorsFromFiles() error {
-	if ah.FilePaths == nil {
-		logger.Error("Cannot fill actors from file. FilePaths not initialized")
+func (ah *ActorHandler) FillActorsFromFile() error {
+	if ah.NamesPath == nil {
+		logger.Error("Cannot fill actors from file. FilePath not initialized")
 		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
 	}
 
-	fNames := make([][]byte, 0)
-	for _, p := range *ah.FilePaths {
-		fh := tools.FileHandler{BasePath: p}
-		names, err := fh.ReadNameFile(&p)
-		if err != nil {
-			continue
-		}
-
-		fNames = append(fNames, *names...)
+	fh := tools.FileHandler{BasePath: *ah.NamesPath}
+	names, err := fh.ReadNameFile(ah.NamesPath)
+	if err != nil {
+		logger.Error("Cannot read name file at path:", ah.NamesPath.PathAsString(), "error:", err)
+		return err
 	}
 
-	for _, n := range fNames {
+	for _, n := range *names {
 		a, err := ah.createActor(&n)
 		if err != nil {
 			logger.Error("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
@@ -76,7 +73,6 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 
 	fNames := make([][]byte, 0)
 	for _, p := range *ah.DirPaths {
-		logger.Log("Actors for base path:", p.PathAsString())
 		fh := tools.FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
@@ -100,16 +96,19 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 	return nil
 }
 
-func (ah *ActorHandler) fillActorsFromDummyFile() error {
-	// Remove me
-	data, err := ioutil.ReadFile("/Users/andre/Desktop/names.json"); if err != nil {
+func (ah *ActorHandler) fillActorsFromCachedFile() error {
+	if ah.CachedPath == nil || !ah.CachedPath.PathDefined() {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(ah.CachedPath.Path); if err != nil {
 		logger.Error("Failed to read temp names file with error:", err)
 		return err
 	}
 
 	names := make([]string, 0)
 	err = json.Unmarshal(data, &names); if err != nil {
-		logger.Error("Failed to unmarshal Dummy json file with error:", err)
+		logger.Error("`ActorHandler::fillActorsFromCachedFile` failed to unmarshal json file with error:", err)
 		return err
 	}
 
@@ -232,7 +231,7 @@ func (ah *ActorHandler) AddNameToMovies() {
 
 func (ah *ActorHandler) MoveMovies() {
 	for _, a := range ah.Actors {
-		ap := path.Join(ah.ToPath, a.FullName())
+		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
 		fi, err := os.Stat(ap)
 		if err != nil && os.IsNotExist(err) {
 			os.Mkdir(ap, 0644)

@@ -32,6 +32,7 @@ type Handler struct {
 	AfterReturn func()
 	Tab         func()
 	KeyPress    func()
+	Escape      func()
 }
 
 func (uih *Handler) Setup() {
@@ -76,7 +77,13 @@ mainloop:
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
-			case termbox.KeyEsc, termbox.KeyCtrlC:
+			case termbox.KeyEsc:
+				if uih.Escape == nil {
+					break mainloop
+				}
+
+				uih.Escape()
+			case termbox.KeyCtrlC:
 				break mainloop
 			case termbox.KeyArrowRight, termbox.KeyCtrlF:
 				uih.arrowRight()
