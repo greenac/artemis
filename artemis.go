@@ -8,6 +8,7 @@ import (
 	"os"
 	"io/ioutil"
 	"encoding/json"
+	"reflect"
 )
 
 func main() {
@@ -32,13 +33,18 @@ func main() {
 		panic(err)
 	}
 
+	logger.Log("Got config:", reflect.TypeOf(config["targetDirs"]))
+	is := config["targetDirs"].([]interface{})
+	for t, d := range is {
+		logger.Log(t, d)
+	}
 
-	targs, has := config["targetDirs"].([]string); if !has {
+	targs, has := config["targetDirs"].([]interface{}); if !has {
 		logger.Error("No target directories in config")
 		panic("INVALID_CONFIG")
 	}
 
-	acts, has := config["actorDirs"].([]string); if !has {
+	acts, has := config["actorDirs"].([]interface{}); if !has {
 		logger.Error("No actor directories in config")
 		panic("INVALID_CONFIG")
 	}
@@ -66,11 +72,11 @@ func main() {
 	actorPaths := make([]tools.FilePath, len(acts))
 
 	for i, p := range targs {
-		targetPaths[i] = tools.FilePath{Path: p}
+		targetPaths[i] = tools.FilePath{Path: p.(string)}
 	}
 
 	for i, p := range acts {
-		actorPaths[i] = tools.FilePath{Path: p}
+		actorPaths[i] = tools.FilePath{Path: p.(string)}
 	}
 
 	anh := ui.AddNamesHandler{}
