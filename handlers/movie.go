@@ -31,7 +31,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 		for _, f := range *fh.Files {
 			if movie.IsMovie(&f) {
-				m :=  movie.Movie{File: f}
+				m := movie.Movie{File: f}
 				m.Path = path.Join(p.Path, *m.Name())
 				mvs = append(mvs, m)
 			}
@@ -50,7 +50,8 @@ func (mh *MovieHandler) RenameMovies(mvs []*movie.Movie) {
 		}
 
 		fh := tools.FileHandler{}
-		err := fh.Rename(m.Path, m.GetNewName()); if err != nil {
+		err := fh.Rename(m.Path, m.GetNewName())
+		if err != nil {
 			logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
 		}
 	}

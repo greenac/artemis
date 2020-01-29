@@ -1,6 +1,9 @@
 package handlers
 
-import "github.com/greenac/artemis/tools"
+import (
+	"github.com/greenac/artemis/tools"
+	"strings"
+)
 import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/movie"
@@ -21,10 +24,10 @@ func (ah *ArtemisHandler) Setup(
 ) {
 	if ah.ActorHandler == nil {
 		actHand := ActorHandler{
-			DirPaths: actorDirPaths,
-			NamesPath: actorFilePath,
+			DirPaths:   actorDirPaths,
+			NamesPath:  actorFilePath,
 			CachedPath: cachedNamePath,
-			ToPath: toPath,
+			ToPath:     toPath,
 		}
 		err := actHand.FillActors()
 		if err != nil {
@@ -36,7 +39,11 @@ func (ah *ArtemisHandler) Setup(
 
 	if ah.MovieHandler == nil {
 		mh := MovieHandler{DirPaths: movieDirPaths}
-		mh.SetMovies()
+		err := mh.SetMovies()
+		if err != nil {
+			logger.Error("`ArtemisHandler::Setup` could not set movies.", err)
+			panic(err)
+		}
 
 		ah.MovieHandler = &mh
 	}
@@ -50,7 +57,11 @@ func (ah *ArtemisHandler) Sort() {
 		found := false
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
-				a.AddMovie(&m)
+				err := a.AddMovie(&m)
+				if err != nil {
+					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m)
+					continue
+				}
 				found = true
 			}
 		}
@@ -66,8 +77,8 @@ func (ah *ArtemisHandler) Actors() *map[string]*movie.Actor {
 }
 
 func (ah *ArtemisHandler) AddMovie(names string, movie *movie.Movie) {
-	//parts := strings.Split(names, ",")
-	//
+	parts := strings.Split(names, ",")
+	logger.Log("`ArtemisHandler::AddMovie` parts", parts)
 	//ah.actorHandler.AddMovie(name, movie)
 }
 

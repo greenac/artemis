@@ -1,25 +1,25 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/tools"
+	"io/ioutil"
+	"os"
+	"path"
 	"sort"
 	"strings"
-	"encoding/json"
-	"io/ioutil"
-	"path"
-	"os"
 )
 
 type ActorHandler struct {
-	DirPaths  *[]tools.FilePath
-	NamesPath *tools.FilePath
+	DirPaths   *[]tools.FilePath
+	NamesPath  *tools.FilePath
 	CachedPath *tools.FilePath
-	Actors    map[string]*movie.Actor
-	ToPath    *tools.FilePath
+	Actors     map[string]*movie.Actor
+	ToPath     *tools.FilePath
 }
 
 func (ah *ActorHandler) FillActors() error {
@@ -101,13 +101,15 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 		return nil
 	}
 
-	data, err := ioutil.ReadFile(ah.CachedPath.Path); if err != nil {
+	data, err := ioutil.ReadFile(ah.CachedPath.Path)
+	if err != nil {
 		logger.Error("Failed to read temp names file with error:", err)
 		return err
 	}
 
 	names := make([]string, 0)
-	err = json.Unmarshal(data, &names); if err != nil {
+	err = json.Unmarshal(data, &names)
+	if err != nil {
 		logger.Error("`ActorHandler::fillActorsFromCachedFile` failed to unmarshal json file with error:", err)
 		return err
 	}
@@ -221,8 +223,10 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common 
 }
 
 func (ah *ActorHandler) AddNameToMovies() {
+	logger.Debug("`ActorHandler::AddNameToMovies`")
 	for _, a := range ah.Actors {
 		n := a.FullName()
+		logger.Debug("`ActorHandler::AddNameToMovies` adding name:", n, "to actor:", a.FullName())
 		for _, m := range a.Movies {
 			m.AddName(n)
 		}

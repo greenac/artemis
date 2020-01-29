@@ -6,6 +6,15 @@ import (
 
 var goLogger *gologger.GoLogger
 
+func Setup(logPath string) {
+	if goLogger == nil {
+		goLogger = &gologger.GoLogger{LogLevel: gologger.OutputNormal, LogPath: logPath}
+		(*goLogger).Setup()
+	} else {
+		goLogger.LogPath = logPath
+	}
+}
+
 func setup() {
 	if goLogger == nil {
 		goLogger = &gologger.GoLogger{LogLevel: gologger.OutputNormal, LogPath: ""}
@@ -26,4 +35,9 @@ func Error(a ...interface{}) {
 func Warn(a ...interface{}) {
 	setup()
 	goLogger.Warn(a)
+}
+
+func Debug(a ...interface{}) {
+	setup()
+	goLogger.Debug(a)
 }

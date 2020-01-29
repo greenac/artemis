@@ -3,8 +3,8 @@ package movie
 import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/tools"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 type Movie struct {
@@ -21,18 +21,20 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 
 	re, err := regexp.Compile(`[-\s\t!@#$%^&*()[\]<>,.?~]`)
 	if err != nil {
-		logger.Error("Cannot format movie name. Failed to compile regex with error:", err)
+		logger.Error("Movie::FormattedName failed to compile regex with error:", err)
 		return "", err
 	}
 
 	rs := re.ReplaceAll(nn, []byte{'_'})
-	return string(rs) + string(ext), nil
+	return string(rs) + ext, nil
 }
 
 func (m *Movie) AddName(name string) {
+	logger.Debug("Adding name:", name, "to movie:", m.NewName, m.Name())
 	n := ""
 	if m.NewName == "" {
-		nn, err := m.FormattedName(); if err != nil {
+		nn, err := m.FormattedName()
+		if err != nil {
 			logger.Error("Could not add name:", name, "to movie name:", m.Name())
 			return
 		}
@@ -65,7 +67,8 @@ func (m *Movie) AddName(name string) {
 
 func (m *Movie) GetNewName() string {
 	if m.NewName == "" {
-		nn, err := m.FormattedName(); if err != nil {
+		nn, err := m.FormattedName()
+		if err != nil {
 			return ""
 		}
 
