@@ -5,7 +5,7 @@ import (
 )
 
 type File struct {
-	Path string
+	Path    string
 	Info    os.FileInfo
 	NewName string
 	NewPath string

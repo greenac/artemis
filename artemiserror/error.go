@@ -1,35 +1,22 @@
 package artemiserror
 
-import (
-	"github.com/greenac/artemis/logger"
-)
-
 type ExceptionType string
 
 const (
-	ArgsNotInitialized ExceptionType = "ArgsNotInitialized"
+	ArgsNotInitialized ExceptionType = "Arguments not initialized"
+	PathNotSet ExceptionType = "Path not set"
+	InvalidName ExceptionType = "Invalid name"
 )
 
 type ArtemisError struct {
-	Message string
+	message string
 }
 
-func (ani *ArtemisError) Error() string {
-	return ani.Message
+func (e ArtemisError) Error() string {
+	return e.message
 }
 
-func GetArtemisError(et ExceptionType, message *string) *ArtemisError {
-	m := ""
-	if message == nil {
-		switch et {
-		case ArgsNotInitialized:
-			m = string(ArgsNotInitialized)
-		default:
-			logger.Warn("No Error of type:", et)
-		}
-	} else {
-		m = *message
-	}
 
-	return &ArtemisError{Message: m}
+func New(et ExceptionType) ArtemisError {
+	return ArtemisError{string(et)}
 }

@@ -269,7 +269,7 @@ func (uih *Handler) handleReturn() {
 func (uih *Handler) AddBlankLine(c Container) {
 	uih.CursorPosX = 0
 	uih.CursorPosY += 1
-  uih.ContIndex += 1
+	uih.ContIndex += 1
 
 	l := uih.newLine(c)
 	l.Y = uih.CursorPosY
@@ -324,7 +324,7 @@ func (uih *Handler) keyPress(ch rune) {
 	uih.Print(l)
 	uih.CursorPosX += 1
 	uih.SetCursorPosition()
-  uih.SiftLines()
+	uih.SiftLines()
 
 	if uih.KeyPress != nil {
 		uih.KeyPress()
@@ -342,7 +342,7 @@ func (uih *Handler) Print(l *Line) {
 }
 
 func (uih *Handler) DrawAll() {
-  uih.ClearUI()
+	uih.ClearUI()
 	uih.SiftLines()
 	for _, cnt := range uih.orderedContainers() {
 		for _, l := range *uih.GetLines(cnt) {
@@ -388,8 +388,8 @@ func (uih *Handler) Clear(c Container) {
 	}
 
 	if c == uih.Section {
-	  uih.ContIndex = 0
-  }
+		uih.ContIndex = 0
+	}
 
 	uih.lines[c] = make([]*Line, 0)
 }
@@ -424,22 +424,22 @@ func (uih *Handler) SetHeader(txts []string, updateCursor bool) {
 	if updateCursor {
 		uih.CursorPosY = len(txts)
 		uih.AddBlankLine(Header)
-    uih.AddBlankLine(Header)
-    uih.ContIndex = 0
-  }
+		uih.AddBlankLine(Header)
+		uih.ContIndex = 0
+	}
 
 	uih.SiftLines()
 	uih.Flush()
 }
 
 func (uih *Handler) ReplaceLastLine(txt string, c Container) {
-  ls := uih.GetLines(c)
-  if len(*ls) == 0 {
-    return
-  }
+	ls := uih.GetLines(c)
+	if len(*ls) == 0 {
+		return
+	}
 
-  l := (*ls)[len(*ls)-1]
-  l.Text = []rune(txt)
+	l := (*ls)[len(*ls)-1]
+	l.Text = []rune(txt)
 }
 
 func (uih *Handler) Debug(a ...interface{}) {

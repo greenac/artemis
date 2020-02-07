@@ -1,19 +1,25 @@
 package main
 
 import (
+	"encoding/json"
+	"github.com/greenac/artemis/config"
+	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/tools"
 	"github.com/greenac/artemis/ui"
 	"github.com/joho/godotenv"
-	"github.com/greenac/artemis/logger"
-	"os"
 	"io/ioutil"
-	"encoding/json"
-	"reflect"
+	"os"
 )
 
 func main() {
-	err := godotenv.Load(); if err != nil {
+	err := godotenv.Load()
+	if err != nil {
 		logger.Error("Error loading .env file:", err)
+	}
+
+	lp := os.Getenv("LOG_PATH")
+	if lp != "" {
+		logger.Setup(lp)
 	}
 
 	cp := os.Getenv("CONFIG_PATH")
@@ -22,61 +28,66 @@ func main() {
 		panic("NO_CONFIG_PATH")
 	}
 
-	data, err := ioutil.ReadFile(cp); if err != nil {
+	data, err := ioutil.ReadFile(cp)
+	if err != nil {
 		logger.Error("Failed to config file")
 		panic(err)
 	}
 
-	config := make(map[string]interface{}, 0)
-	err = json.Unmarshal(data, &config); if err != nil {
+	ac := config.ArtemisConfig{}
+	err = json.Unmarshal(data, &ac)
+	if err != nil {
 		logger.Error("failed to unmarshal config file json")
 		panic(err)
 	}
 
-	logger.Log("Got config:", reflect.TypeOf(config["targetDirs"]))
-	is := config["targetDirs"].([]interface{})
-	for t, d := range is {
-		logger.Log(t, d)
+	logger.Log(ac)
+
+	//targs, has := config["targetDirs"].([]string)
+	//if !has {
+	//	logger.Error("No target directories in config")
+	//	panic("INVALID_CONFIG")
+	//}
+	//
+	//acts, has := config["actorDirs"].([]string)
+	//if !has {
+	//	logger.Error("No actor directories in config")
+	//	panic("INVALID_CONFIG")
+	//}
+	//
+	//anfp, has := config["actorNamesFile"].(string)
+	//if !has {
+	//	logger.Error("No actor names file path in config")
+	//	panic("INVALID_CONFIG")
+	//}
+	//
+	//cnfp, has := config["cachedNamesFile"].(string)
+	//if !has {
+	//	logger.Error("No cached names file path in config")
+	//	panic("INVALID_CONFIG")
+	//}
+	//
+	//sdfp, has := config["stagingDir"].(string)
+	//if !has {
+	//	logger.Error("No cached names file path in config")
+	//	panic("INVALID_CONFIG")
+	//}
+
+	logger.Debug("Actor name file:", ac.ActorNamesFile)
+
+	actNameFile := tools.FilePath{Path: ac.ActorNamesFile}
+	cachedPath := tools.FilePath{Path: ac.CachedNamesFile}
+	stagingPath := tools.FilePath{Path: ac.StagingDir}
+
+	targetPaths := make([]tools.FilePath, len(ac.TargetDirs))
+	actorPaths := make([]tools.FilePath, len(ac.ActorDirs))
+
+	for i, p := range ac.TargetDirs {
+		targetPaths[i] = tools.FilePath{Path: p}
 	}
 
-	targs, has := config["targetDirs"].([]interface{}); if !has {
-		logger.Error("No target directories in config")
-		panic("INVALID_CONFIG")
-	}
-
-	acts, has := config["actorDirs"].([]interface{}); if !has {
-		logger.Error("No actor directories in config")
-		panic("INVALID_CONFIG")
-	}
-
-	anfp, has := config["actorNamesFile"].(string); if !has {
-		logger.Error("No actor names file path in config")
-		panic("INVALID_CONFIG")
-	}
-
-	cnfp, has := config["cachedNamesFile"].(string); if !has {
-		logger.Error("No cached names file path in config")
-		panic("INVALID_CONFIG")
-	}
-
-	sdfp, has := config["stagingDir"].(string); if !has {
-		logger.Error("No cached names file path in config")
-		panic("INVALID_CONFIG")
-	}
-
-	actNameFile := tools.FilePath{Path: anfp}
-	cachedPath := tools.FilePath{Path: cnfp}
-	stagingPath := tools.FilePath{Path: sdfp}
-
-	targetPaths := make([]tools.FilePath, len(targs))
-	actorPaths := make([]tools.FilePath, len(acts))
-
-	for i, p := range targs {
-		targetPaths[i] = tools.FilePath{Path: p.(string)}
-	}
-
-	for i, p := range acts {
-		actorPaths[i] = tools.FilePath{Path: p.(string)}
+	for i, p := range ac.ActorDirs {
+		actorPaths[i] = tools.FilePath{Path: p}
 	}
 
 	anh := ui.AddNamesHandler{}
