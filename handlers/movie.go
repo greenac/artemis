@@ -44,15 +44,24 @@ func (mh *MovieHandler) SetMovies() error {
 
 func (mh *MovieHandler) RenameMovies(mvs []*movie.Movie) {
 	for _, m := range mvs {
-		if m.Path == "" {
-			logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "does not have path set")
+		err := mh.RenameMovie(m)
+		if err != nil {
 			continue
 		}
-
-		fh := tools.FileHandler{}
-		err := fh.Rename(m.Path, m.GetNewName())
-		if err != nil {
-			logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
-		}
 	}
+}
+
+func (mh *MovieHandler) RenameMovie(m *movie.Movie) error {
+	if m.Path == "" {
+		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "does not have path set")
+		return artemiserror.New(artemiserror.PathNotSet)
+	}
+
+	fh := tools.FileHandler{}
+	err := fh.Rename(m.Path, m.GetNewName())
+	if err != nil {
+		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
+	}
+
+	return nil
 }

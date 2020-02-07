@@ -238,7 +238,11 @@ func (ah *ActorHandler) MoveMovies() {
 		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
 		fi, err := os.Stat(ap)
 		if err != nil && os.IsNotExist(err) {
-			os.Mkdir(ap, 0644)
+			err = os.Mkdir(ap, 0644)
+			if err != nil {
+				logger.Error("`ActorHandler::MoveMovies` could not make directory:", ap)
+				panic(err)
+			}
 		} else if err != nil {
 			logger.Error("`ActorHandler::MoveMovies` error checking file:", err)
 			continue
@@ -250,9 +254,18 @@ func (ah *ActorHandler) MoveMovies() {
 		for _, m := range a.Movies {
 			if m.NewPath == "" {
 				m.NewPath = path.Join(ap, m.GetNewName())
-				os.Rename(m.Path, m.NewPath)
+				err = os.Rename(m.Path, m.NewPath)
+				if err != nil {
+					logger.Error("`ActorHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath)
+					panic(err)
+				}
 			} else {
-				os.Symlink(m.NewPath, path.Join(ap, m.GetNewName()))
+				np := path.Join(ap, m.GetNewName())
+				err = os.Symlink(m.NewPath, np)
+				if err != nil {
+					logger.Error("`ActorHandler::MoveMovies` could not symlink:", m.Path, "to:", np)
+					panic(err)
+				}
 			}
 		}
 	}
