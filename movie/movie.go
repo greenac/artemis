@@ -9,6 +9,7 @@ import (
 
 type Movie struct {
 	tools.File
+	actors []*Actor
 }
 
 func (m *Movie) FormattedName() (formattedName string, error error) {

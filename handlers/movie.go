@@ -11,6 +11,7 @@ import (
 type MovieHandler struct {
 	DirPaths *[]tools.FilePath
 	Movies   *[]movie.Movie
+	NewToPath *tools.FilePath
 }
 
 func (mh *MovieHandler) SetMovies() error {
@@ -44,10 +45,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 func (mh *MovieHandler) RenameMovies(mvs []*movie.Movie) {
 	for _, m := range mvs {
-		err := mh.RenameMovie(m)
-		if err != nil {
-			continue
-		}
+		mh.RenameMovie(m)
 	}
 }
 
@@ -58,7 +56,8 @@ func (mh *MovieHandler) RenameMovie(m *movie.Movie) error {
 	}
 
 	fh := tools.FileHandler{}
-	err := fh.Rename(m.Path, m.GetNewName())
+
+	err := fh.Rename(m.Path, m.RenamePath())
 	if err != nil {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
 	}
