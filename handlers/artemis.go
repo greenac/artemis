@@ -88,8 +88,11 @@ func (ah *ArtemisHandler) RenameMovies() {
 			continue
 		}
 
+		logger.Debug("`ArtemisHandler::RenameMovies` actor:", a.FullName())
+
 		mvs := make([]*movie.Movie, 0)
 		for _, m := range a.Movies {
+			logger.Debug("`ArtemisHandler::RenameMovies` movie:", *m.Name())
 			mvs = append(mvs, m)
 		}
 

@@ -25,8 +25,8 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 		return "", err
 	}
 
-	rs := re.ReplaceAll(nn, []byte{'_'})
-	return string(rs) + ext, nil
+	rs := re.ReplaceAll([]byte(name), []byte{'_'})
+	return string(rs) + "." + ext, nil
 }
 
 func (m *Movie) AddName(name string) {

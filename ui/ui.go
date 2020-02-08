@@ -78,7 +78,9 @@ mainloop:
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc:
+				logger.Debug("Escape key hit...")
 				if uih.Escape == nil {
+					logger.Debug("breaking main loop")
 					break mainloop
 				}
 
@@ -204,7 +206,7 @@ func (uih *Handler) arrowLeft() {
 
 	uih.CursorPosX -= 1
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) arrowRight() {
@@ -216,7 +218,7 @@ func (uih *Handler) arrowRight() {
 
 	uih.CursorPosX += 1
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) arrowUp() {
@@ -233,7 +235,7 @@ func (uih *Handler) arrowUp() {
 	}
 
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) arrowDown() {
@@ -250,7 +252,7 @@ func (uih *Handler) arrowDown() {
 	}
 
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) SetCursorPosition() {
@@ -275,7 +277,7 @@ func (uih *Handler) AddBlankLine(c Container) {
 	l.Y = uih.CursorPosY
 	uih.addLine(l, c)
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) handleSpace() {
@@ -284,7 +286,7 @@ func (uih *Handler) handleSpace() {
 	uih.Print(l)
 	uih.CursorPosX += 1
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) tab() {
@@ -304,7 +306,7 @@ func (uih *Handler) backspace() {
 		return
 	}
 
-	termbox.Flush()
+	uih.Flush()
 	l := uih.currentLine()
 
 	for i := uih.CursorPosX - 1; i < len(l.Text); i += 1 {
@@ -315,7 +317,7 @@ func (uih *Handler) backspace() {
 	uih.Print(l)
 	uih.CursorPosX -= 1
 	uih.SetCursorPosition()
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) keyPress(ch rune) {
@@ -330,7 +332,7 @@ func (uih *Handler) keyPress(ch rune) {
 		uih.KeyPress()
 	}
 
-	termbox.Flush()
+	uih.Flush()
 }
 
 func (uih *Handler) Print(l *Line) {
@@ -377,7 +379,11 @@ func (uih *Handler) SiftLines() {
 }
 
 func (uih *Handler) Flush() {
-	termbox.Flush()
+	err := termbox.Flush()
+	if err != nil {
+		logger.Error("Handler::Flush failed to flush with errror:', err")
+		panic(err)
+	}
 }
 
 func (uih *Handler) Clear(c Container) {
@@ -398,11 +404,14 @@ func (uih *Handler) ClearAll() {
 	uih.Setup()
 	uih.lines = make(map[Container][]*Line)
 
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	uih.ClearUI()
 }
 
 func (uih *Handler) ClearUI() {
-	termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+	if err != nil {
+		logger.Warn("`Handler::ClearUI` failed with error:", err)
+	}
 }
 
 func (uih *Handler) SetHeader(txts []string, updateCursor bool) {

@@ -110,6 +110,7 @@ func (fh *FileHandler) Rename(oldName string, newName string) error {
 	_, err := os.Stat(newName)
 	if err != nil {
 		if os.IsNotExist(err) {
+			logger.Log("`FileHandler::Rename` Renaming:", oldName, "to:", newName)
 			return os.Rename(oldName, newName)
 		}
 

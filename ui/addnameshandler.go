@@ -137,8 +137,6 @@ func (anh *AddNamesHandler) handleTab() {
 		txt = append(txt, l.Text...)
 	}
 
-	logger.Log("handling tab for txt:", string(txt))
-
 	pts := strings.Split(string(txt), ",")
 	name := strings.ToLower(strings.Trim(pts[len(pts)-1], " "))
 	matches, common := anh.artemisHandler.ActorHandler.NameMatches(name)

@@ -42,7 +42,7 @@ func (ah *ActorHandler) FillActors() error {
 func (ah *ActorHandler) FillActorsFromFile() error {
 	if ah.NamesPath == nil {
 		logger.Error("Cannot fill actors from file. FilePath not initialized")
-		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	fh := tools.FileHandler{BasePath: *ah.NamesPath}
@@ -68,7 +68,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 func (ah *ActorHandler) FillActorsFromDirs() error {
 	if ah.DirPaths == nil {
 		logger.Error("Cannot fill actors from dirs. DirPaths not initialized")
-		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	fNames := make([][]byte, 0)
@@ -130,7 +130,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
 	if name == nil || len(*name) == 0 {
 		logger.Error("Cannot create actor from name:", name)
-		return movie.Actor{}, artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+		return movie.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	n := strings.TrimSpace(string(*name))

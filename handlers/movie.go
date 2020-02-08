@@ -16,7 +16,7 @@ type MovieHandler struct {
 func (mh *MovieHandler) SetMovies() error {
 	if mh.DirPaths == nil {
 		logger.Error("Cannot fill movies from dirs. DirPaths not initialized")
-		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	mvs := make([]movie.Movie, 0)
