@@ -26,7 +26,52 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 	}
 
 	rs := re.ReplaceAll([]byte(name), []byte{'_'})
-	return string(rs) + "." + ext, nil
+
+	return string(*(m.CleanUnderscores(&rs))) + "." + ext, nil
+}
+
+func (m *Movie) CleanUnderscores(name *[]byte) *[]byte {
+	cln := make([]byte, 0)
+	fndUn := false
+	for _, c := range *name {
+		if c == '_' {
+			if !fndUn {
+				cln = append(cln, c)
+				fndUn = true
+			}
+		} else {
+			fndUn = false
+			cln = append(cln, c)
+		}
+	}
+
+	if cln[len(cln)-1] == '_' {
+		var cut int
+		for i := len(cln) - 1; i >= 0; i -= 1 {
+			if cln[i] == '_' {
+				cut = i
+			} else {
+				break
+			}
+		}
+
+		cln = cln[:cut]
+	}
+
+	if cln[0] == '_' {
+		var cut int
+		for i := 0; i < len(cln); i += 1 {
+			if cln[i] == '_' {
+				cut = i
+			} else {
+				break
+			}
+		}
+
+		cln = cln[cut + 1:]
+	}
+
+	return &cln
 }
 
 func (m *Movie) AddName(name string) {
