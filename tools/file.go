@@ -3,6 +3,7 @@ package tools
 import (
 	"os"
 	"path"
+	"strings"
 )
 
 type File struct {
@@ -26,5 +27,10 @@ func (f *File) GetNewTotalPath() string {
 }
 
 func (f *File) RenamePath() string {
-	return path.Join(f.Path, f.NewName)
+	pts := strings.Split(f.Path, "/")
+	if len(pts) == 1 {
+		return path.Join(f.Path, f.NewName)
+	}
+
+	return path.Join(strings.Join(pts[:len(pts) - 1], "/"), f.NewName)
 }

@@ -77,15 +77,17 @@ func (anh *AddNamesHandler) onKeyPress() {
 		if txtStr == "y" || txtStr == "yes" {
 			m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
 			for _, n := range anh.addNames {
-				err := anh.artemisHandler.ActorHandler.AddMovie(n, &m)
+				a, err := anh.artemisHandler.ActorHandler.ActorForName(n)
 				if err != nil {
-					anh.uiHandler.Debug("Cannot add movie", m.Name(), "To actor:", n, "error:", err)
+					logger.Warn("`AddNamesHandler::onKeyPress` no actor for name:",  n)
 					continue
 				}
 
-				anh.uiHandler.Debug("Adding:", m.Name(), "to actor:", n)
-				logger.Debug("`AddNamesHandler::onKeyPress` adding movie:", *(m.Name()), "to actor:", n)
+				m.AddActor(a)
 			}
+
+			m.AddActorNames()
+			anh.artemisHandler.MovieHandler.AddUnknownMovie(&m)
 		}
 
 		anh.unkIndex += 1

@@ -12,6 +12,7 @@ type MovieHandler struct {
 	DirPaths *[]tools.FilePath
 	Movies   *[]movie.Movie
 	NewToPath *tools.FilePath
+	UnknownMovies []*movie.Movie
 }
 
 func (mh *MovieHandler) SetMovies() error {
@@ -22,7 +23,6 @@ func (mh *MovieHandler) SetMovies() error {
 
 	mvs := make([]movie.Movie, 0)
 	for _, p := range *mh.DirPaths {
-		logger.Log("Movies for base path:", p.PathAsString())
 		fh := tools.FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
@@ -56,11 +56,26 @@ func (mh *MovieHandler) RenameMovie(m *movie.Movie) error {
 	}
 
 	fh := tools.FileHandler{}
-
 	err := fh.Rename(m.Path, m.RenamePath())
 	if err != nil {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
+		return err
 	}
 
 	return nil
+}
+
+func (mh *MovieHandler) AddUnknownMovie(m *movie.Movie) {
+	mh.UnknownMovies = append(mh.UnknownMovies, m)
+}
+
+func (mh *MovieHandler) AddUnknownMovieNames() {
+	for _, m := range mh.UnknownMovies {
+		m.AddActorNames()
+	}
+}
+
+func (mh *MovieHandler) RenameUnknownMovies() {
+	logger.Debug("MovieHandler::RenameUnknownMovies renaming:", len(mh.UnknownMovies))
+	mh.RenameMovies(mh.UnknownMovies)
 }

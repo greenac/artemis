@@ -9,7 +9,7 @@ import (
 
 type Movie struct {
 	tools.File
-	actors []*Actor
+	Actors []*Actor
 }
 
 func (m *Movie) FormattedName() (formattedName string, error error) {
@@ -75,40 +75,38 @@ func (m *Movie) CleanUnderscores(name *[]byte) *[]byte {
 	return &cln
 }
 
-func (m *Movie) AddName(name string) {
-	logger.Debug("Adding name:", name, "to movie:", m.NewName, m.Name())
-	n := ""
-	if m.NewName == "" {
-		nn, err := m.FormattedName()
-		if err != nil {
-			logger.Error("Could not add name:", name, "to movie name:", m.Name())
-			return
+func (m *Movie) AddName(a *Actor) string {
+	fn := a.FullName()
+	if strings.Contains(m.NewName, fn) {
+		return m.NewName
+	}
+
+	var nn string
+	i := strings.Index(m.NewName, *a.FirstName)
+	if i == -1 {
+		pts := strings.Split(m.NewName, ".")
+		if len(pts) != 2 {
+			logger.Warn("`Movie::Rename`", m.NewName, "not in proper format")
+			return m.NewName
 		}
 
-		m.NewName = nn
-	}
+		nm := pts[0]
+		nmb := []byte(nm)
 
-	pts := strings.Split(m.NewName, ".")
-	if len(pts) != 2 {
-		logger.Warn("`Movie::Rename`", n, "not in proper format")
-		return
-	}
+		if !strings.Contains(nm, fn) {
+			if nmb[len(nmb)-1] == '_' {
+				nm += fn
+			} else {
+				nm += "_" + fn
+			}
+		}
 
-	nm := pts[0]
-	nmb := []byte(nm)
-	an := strings.ToLower(name)
-
-	if strings.Contains(nm, an) {
-		return
-	}
-
-	if nmb[len(nmb)-1] == '_' {
-		nm += an
+		nn = nm + "." + pts[1]
 	} else {
-		nm += "_" + an
+		nn = strings.ReplaceAll(m.NewName, *a.FirstName, fn)
 	}
 
-	m.NewName = nm
+	return nn
 }
 
 func (m *Movie) GetNewName() string {
@@ -122,4 +120,15 @@ func (m *Movie) GetNewName() string {
 	}
 
 	return m.NewName
+}
+
+func (m *Movie) AddActor(a *Actor) {
+	m.Actors = append(m.Actors, a)
+}
+
+func (m *Movie) AddActorNames() {
+	m.GetNewName()
+	for _, a := range m.Actors {
+		m.NewName = m.AddName(a)
+	}
 }

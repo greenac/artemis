@@ -41,8 +41,6 @@ func main() {
 		panic(err)
 	}
 
-	logger.Debug("Actor name file:", ac.ActorNamesFile)
-
 	actNameFile := tools.FilePath{Path: ac.ActorNamesFile}
 	cachedPath := tools.FilePath{Path: ac.CachedNamesFile}
 	stagingPath := tools.FilePath{Path: ac.StagingDir}

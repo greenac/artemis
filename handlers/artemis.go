@@ -52,14 +52,13 @@ func (ah *ArtemisHandler) Setup(
 }
 
 func (ah *ArtemisHandler) Sort() {
-	logger.Log("Sorting:", len(*ah.MovieHandler.Movies), "movies")
 	for _, m := range *ah.MovieHandler.Movies {
 		found := false
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
 				err := a.AddMovie(&m)
 				if err != nil {
-					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m)
+					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m, "for actor:", a.FullName())
 					continue
 				}
 				found = true
@@ -89,14 +88,14 @@ func (ah *ArtemisHandler) RenameMovies() {
 			continue
 		}
 
-		logger.Debug("`ArtemisHandler::RenameMovies` actor:", a.FullName())
-
 		mvs := make([]*movie.Movie, 0)
 		for _, m := range a.Movies {
-			logger.Debug("`ArtemisHandler::RenameMovies` movie:", *m.Name())
 			mvs = append(mvs, m)
 		}
 
 		ah.MovieHandler.RenameMovies(mvs)
 	}
+
+	ah.MovieHandler.AddUnknownMovieNames()
+	ah.MovieHandler.RenameUnknownMovies()
 }

@@ -87,8 +87,6 @@ func (a *Actor) AddMovie(m *Movie) error {
 
 	a.Movies[*m.Name()] = m
 
-	logger.Debug("Actor::AddMovie adding movie:", *m.Name(), "to actor:", a.FullName())
-
 	return nil
 }
 

@@ -223,12 +223,11 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common 
 }
 
 func (ah *ActorHandler) AddNameToMovies() {
-	logger.Debug("`ActorHandler::AddNameToMovies`")
 	for _, a := range ah.Actors {
 		n := a.FullName()
 		logger.Debug("`ActorHandler::AddNameToMovies` adding name:", n, "to actor:", a.FullName())
 		for _, m := range a.Movies {
-			m.AddName(n)
+			m.AddName(a)
 		}
 	}
 }
@@ -277,4 +276,13 @@ func (ah *ActorHandler) PrintActors() {
 		logger.Log(i, actor.FullName())
 		i += 1
 	}
+}
+
+func (ah *ActorHandler) ActorForName(name string) (actor *movie.Actor, error error) {
+	a, has := ah.Actors[name]
+	if has {
+		return a, nil
+	}
+
+	return nil, artemiserror.New(artemiserror.InvalidName)
 }

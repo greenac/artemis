@@ -78,7 +78,6 @@ mainloop:
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc:
-				logger.Debug("Escape key hit...")
 				if uih.Escape == nil {
 					logger.Debug("breaking main loop")
 					break mainloop
