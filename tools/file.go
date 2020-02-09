@@ -32,5 +32,5 @@ func (f *File) RenamePath() string {
 		return path.Join(f.Path, f.NewName)
 	}
 
-	return path.Join(strings.Join(pts[:len(pts) - 1], "/"), f.NewName)
+	return path.Join(strings.Join(pts[:len(pts)-1], "/"), f.NewName)
 }

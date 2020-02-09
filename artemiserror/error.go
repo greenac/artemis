@@ -4,8 +4,8 @@ type ExceptionType string
 
 const (
 	ArgsNotInitialized ExceptionType = "Arguments not initialized"
-	PathNotSet ExceptionType = "Path not set"
-	InvalidName ExceptionType = "Invalid name"
+	PathNotSet         ExceptionType = "Path not set"
+	InvalidName        ExceptionType = "Invalid name"
 )
 
 type ArtemisError struct {
@@ -15,7 +15,6 @@ type ArtemisError struct {
 func (e ArtemisError) Error() string {
 	return e.message
 }
-
 
 func New(et ExceptionType) ArtemisError {
 	return ArtemisError{string(et)}
