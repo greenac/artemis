@@ -69,7 +69,7 @@ func (m *Movie) CleanUnderscores(name *[]byte) *[]byte {
 			}
 		}
 
-		cln = cln[cut + 1:]
+		cln = cln[cut+1:]
 	}
 
 	return &cln

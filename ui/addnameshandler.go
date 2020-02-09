@@ -79,7 +79,7 @@ func (anh *AddNamesHandler) onKeyPress() {
 			for _, n := range anh.addNames {
 				a, err := anh.artemisHandler.ActorHandler.ActorForName(n)
 				if err != nil {
-					logger.Warn("`AddNamesHandler::onKeyPress` no actor for name:",  n)
+					logger.Warn("`AddNamesHandler::onKeyPress` no actor for name:", n)
 					continue
 				}
 

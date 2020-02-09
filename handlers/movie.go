@@ -9,9 +9,9 @@ import (
 )
 
 type MovieHandler struct {
-	DirPaths *[]tools.FilePath
-	Movies   *[]movie.Movie
-	NewToPath *tools.FilePath
+	DirPaths      *[]tools.FilePath
+	Movies        *[]movie.Movie
+	NewToPath     *tools.FilePath
 	UnknownMovies []*movie.Movie
 }
 
