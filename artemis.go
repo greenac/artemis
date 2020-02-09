@@ -41,40 +41,6 @@ func main() {
 		panic(err)
 	}
 
-	logger.Log(ac)
-
-	//targs, has := config["targetDirs"].([]string)
-	//if !has {
-	//	logger.Error("No target directories in config")
-	//	panic("INVALID_CONFIG")
-	//}
-	//
-	//acts, has := config["actorDirs"].([]string)
-	//if !has {
-	//	logger.Error("No actor directories in config")
-	//	panic("INVALID_CONFIG")
-	//}
-	//
-	//anfp, has := config["actorNamesFile"].(string)
-	//if !has {
-	//	logger.Error("No actor names file path in config")
-	//	panic("INVALID_CONFIG")
-	//}
-	//
-	//cnfp, has := config["cachedNamesFile"].(string)
-	//if !has {
-	//	logger.Error("No cached names file path in config")
-	//	panic("INVALID_CONFIG")
-	//}
-	//
-	//sdfp, has := config["stagingDir"].(string)
-	//if !has {
-	//	logger.Error("No cached names file path in config")
-	//	panic("INVALID_CONFIG")
-	//}
-
-	logger.Debug("Actor name file:", ac.ActorNamesFile)
-
 	actNameFile := tools.FilePath{Path: ac.ActorNamesFile}
 	cachedPath := tools.FilePath{Path: ac.CachedNamesFile}
 	stagingPath := tools.FilePath{Path: ac.StagingDir}

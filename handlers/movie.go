@@ -11,17 +11,18 @@ import (
 type MovieHandler struct {
 	DirPaths *[]tools.FilePath
 	Movies   *[]movie.Movie
+	NewToPath *tools.FilePath
+	UnknownMovies []*movie.Movie
 }
 
 func (mh *MovieHandler) SetMovies() error {
 	if mh.DirPaths == nil {
 		logger.Error("Cannot fill movies from dirs. DirPaths not initialized")
-		return artemiserror.GetArtemisError(artemiserror.ArgsNotInitialized, nil)
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	mvs := make([]movie.Movie, 0)
 	for _, p := range *mh.DirPaths {
-		logger.Log("Movies for base path:", p.PathAsString())
 		fh := tools.FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
@@ -44,10 +45,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 func (mh *MovieHandler) RenameMovies(mvs []*movie.Movie) {
 	for _, m := range mvs {
-		err := mh.RenameMovie(m)
-		if err != nil {
-			continue
-		}
+		mh.RenameMovie(m)
 	}
 }
 
@@ -58,10 +56,26 @@ func (mh *MovieHandler) RenameMovie(m *movie.Movie) error {
 	}
 
 	fh := tools.FileHandler{}
-	err := fh.Rename(m.Path, m.GetNewName())
+	err := fh.Rename(m.Path, m.RenamePath())
 	if err != nil {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
+		return err
 	}
 
 	return nil
+}
+
+func (mh *MovieHandler) AddUnknownMovie(m *movie.Movie) {
+	mh.UnknownMovies = append(mh.UnknownMovies, m)
+}
+
+func (mh *MovieHandler) AddUnknownMovieNames() {
+	for _, m := range mh.UnknownMovies {
+		m.AddActorNames()
+	}
+}
+
+func (mh *MovieHandler) RenameUnknownMovies() {
+	logger.Debug("MovieHandler::RenameUnknownMovies renaming:", len(mh.UnknownMovies))
+	mh.RenameMovies(mh.UnknownMovies)
 }

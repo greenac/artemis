@@ -9,6 +9,7 @@ import (
 
 type Movie struct {
 	tools.File
+	Actors []*Actor
 }
 
 func (m *Movie) FormattedName() (formattedName string, error error) {
@@ -25,44 +26,87 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 		return "", err
 	}
 
-	rs := re.ReplaceAll(nn, []byte{'_'})
-	return string(rs) + ext, nil
+	rs := re.ReplaceAll([]byte(name), []byte{'_'})
+
+	return string(*(m.CleanUnderscores(&rs))) + "." + ext, nil
 }
 
-func (m *Movie) AddName(name string) {
-	logger.Debug("Adding name:", name, "to movie:", m.NewName, m.Name())
-	n := ""
-	if m.NewName == "" {
-		nn, err := m.FormattedName()
-		if err != nil {
-			logger.Error("Could not add name:", name, "to movie name:", m.Name())
-			return
+func (m *Movie) CleanUnderscores(name *[]byte) *[]byte {
+	cln := make([]byte, 0)
+	fndUn := false
+	for _, c := range *name {
+		if c == '_' {
+			if !fndUn {
+				cln = append(cln, c)
+				fndUn = true
+			}
+		} else {
+			fndUn = false
+			cln = append(cln, c)
+		}
+	}
+
+	if cln[len(cln)-1] == '_' {
+		var cut int
+		for i := len(cln) - 1; i >= 0; i -= 1 {
+			if cln[i] == '_' {
+				cut = i
+			} else {
+				break
+			}
 		}
 
-		m.NewName = nn
+		cln = cln[:cut]
 	}
 
-	pts := strings.Split(m.NewName, ".")
-	if len(pts) != 2 {
-		logger.Warn("`Movie::Rename`", n, "not in proper format")
-		return
+	if cln[0] == '_' {
+		var cut int
+		for i := 0; i < len(cln); i += 1 {
+			if cln[i] == '_' {
+				cut = i
+			} else {
+				break
+			}
+		}
+
+		cln = cln[cut + 1:]
 	}
 
-	nm := pts[0]
-	nmb := []byte(nm)
-	an := strings.ToLower(name)
+	return &cln
+}
 
-	if strings.Contains(nm, an) {
-		return
+func (m *Movie) AddName(a *Actor) string {
+	fn := a.FullName()
+	if strings.Contains(m.NewName, fn) {
+		return m.NewName
 	}
 
-	if nmb[len(nmb)-1] == '_' {
-		nm += an
+	var nn string
+	i := strings.Index(m.NewName, *a.FirstName)
+	if i == -1 {
+		pts := strings.Split(m.NewName, ".")
+		if len(pts) != 2 {
+			logger.Warn("`Movie::Rename`", m.NewName, "not in proper format")
+			return m.NewName
+		}
+
+		nm := pts[0]
+		nmb := []byte(nm)
+
+		if !strings.Contains(nm, fn) {
+			if nmb[len(nmb)-1] == '_' {
+				nm += fn
+			} else {
+				nm += "_" + fn
+			}
+		}
+
+		nn = nm + "." + pts[1]
 	} else {
-		nm += "_" + an
+		nn = strings.ReplaceAll(m.NewName, *a.FirstName, fn)
 	}
 
-	m.NewName = nm
+	return nn
 }
 
 func (m *Movie) GetNewName() string {
@@ -76,4 +120,15 @@ func (m *Movie) GetNewName() string {
 	}
 
 	return m.NewName
+}
+
+func (m *Movie) AddActor(a *Actor) {
+	m.Actors = append(m.Actors, a)
+}
+
+func (m *Movie) AddActorNames() {
+	m.GetNewName()
+	for _, a := range m.Actors {
+		m.NewName = m.AddName(a)
+	}
 }

@@ -86,12 +86,16 @@ func (a *Actor) AddMovie(m *Movie) error {
 	}
 
 	a.Movies[*m.Name()] = m
+
 	return nil
 }
 
 func (a *Actor) AddFiles(mvs []*Movie) {
 	for _, m := range mvs {
-		a.AddMovie(m)
+		err := a.AddMovie(m)
+		if err != nil {
+			logger.Warn("`Actor::AddFiles` failed to add:", m.Name(), "to:", a.FullName())
+		}
 	}
 }
 

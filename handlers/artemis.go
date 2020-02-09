@@ -38,7 +38,7 @@ func (ah *ArtemisHandler) Setup(
 	}
 
 	if ah.MovieHandler == nil {
-		mh := MovieHandler{DirPaths: movieDirPaths}
+		mh := MovieHandler{DirPaths: movieDirPaths, NewToPath: toPath}
 		err := mh.SetMovies()
 		if err != nil {
 			logger.Error("`ArtemisHandler::Setup` could not set movies.", err)
@@ -52,14 +52,13 @@ func (ah *ArtemisHandler) Setup(
 }
 
 func (ah *ArtemisHandler) Sort() {
-	logger.Log("Sorting:", len(*ah.MovieHandler.Movies), "movies")
 	for _, m := range *ah.MovieHandler.Movies {
 		found := false
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
 				err := a.AddMovie(&m)
 				if err != nil {
-					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m)
+					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m, "for actor:", a.FullName())
 					continue
 				}
 				found = true
@@ -77,9 +76,10 @@ func (ah *ArtemisHandler) Actors() *map[string]*movie.Actor {
 }
 
 func (ah *ArtemisHandler) AddMovie(names string, movie *movie.Movie) {
-	parts := strings.Split(names, ",")
-	logger.Log("`ArtemisHandler::AddMovie` parts", parts)
-	//ah.actorHandler.AddMovie(name, movie)
+	nms := strings.Split(names, ",")
+	for _, n := range nms {
+		ah.ActorHandler.AddMovie(n, movie)
+	}
 }
 
 func (ah *ArtemisHandler) RenameMovies() {
@@ -95,4 +95,7 @@ func (ah *ArtemisHandler) RenameMovies() {
 
 		ah.MovieHandler.RenameMovies(mvs)
 	}
+
+	ah.MovieHandler.AddUnknownMovieNames()
+	ah.MovieHandler.RenameUnknownMovies()
 }
