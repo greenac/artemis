@@ -1,15 +1,15 @@
-package movie
+package utils
 
 import (
 	"errors"
 	"fmt"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/tools"
+	"github.com/greenac/artemis/models"
 	"regexp"
 	"strings"
 )
 
-func FormatMovieName(f *tools.File) (*[]byte, error) {
+func FormatMovieName(f *models.File) (*[]byte, error) {
 	nn := make([]byte, len(*f.Name()))
 	copy(nn, *f.Name())
 	fmt.Println("old name:", string(nn))
@@ -35,7 +35,7 @@ func FormatMovieName(f *tools.File) (*[]byte, error) {
 	return &newName, nil
 }
 
-func IsMovie(f *tools.File) bool {
+func IsMovie(f *models.File) bool {
 	mt, err := MovieType(f)
 	if err != nil {
 		return false
@@ -44,7 +44,7 @@ func IsMovie(f *tools.File) bool {
 	return mt != nil
 }
 
-func MovieType(f *tools.File) (*MovieExt, error) {
+func MovieType(f *models.File) (*MovieExt, error) {
 	if f.IsDir() {
 		return nil, errors.New("NotMovie")
 	}
@@ -63,25 +63,4 @@ func MovieType(f *tools.File) (*MovieExt, error) {
 	}
 
 	return &movExt, nil
-}
-
-func MovieFiles(fh *tools.FileHandler) *[]tools.File {
-	movieFiles := make([]tools.File, 0)
-	for _, f := range *fh.Files {
-		if IsMovie(&f) {
-			movieFiles = append(movieFiles, f)
-		}
-	}
-
-	return &movieFiles
-}
-
-func MovieFileNames(fh *tools.FileHandler) *[][]byte {
-	mFiles := MovieFiles(fh)
-	names := make([][]byte, len(*mFiles))
-	for i, f := range *mFiles {
-		names[i] = []byte(*f.Name())
-	}
-
-	return &names
 }

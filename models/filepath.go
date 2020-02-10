@@ -1,4 +1,4 @@
-package tools
+package models
 
 type FilePath struct {
 	Path string

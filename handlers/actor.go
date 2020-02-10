@@ -5,8 +5,7 @@ import (
 	"errors"
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/movie"
-	"github.com/greenac/artemis/tools"
+	"github.com/greenac/artemis/models"
 	"io/ioutil"
 	"os"
 	"path"
@@ -15,15 +14,15 @@ import (
 )
 
 type ActorHandler struct {
-	DirPaths   *[]tools.FilePath
-	NamesPath  *tools.FilePath
-	CachedPath *tools.FilePath
-	Actors     map[string]*movie.Actor
-	ToPath     *tools.FilePath
+	DirPaths   *[]models.FilePath
+	NamesPath  *models.FilePath
+	CachedPath *models.FilePath
+	Actors     map[string]*models.Actor
+	ToPath     *models.FilePath
 }
 
 func (ah *ActorHandler) FillActors() error {
-	ah.Actors = make(map[string]*movie.Actor)
+	ah.Actors = make(map[string]*models.Actor)
 	if err := ah.FillActorsFromDirs(); err != nil {
 		return err
 	}
@@ -45,7 +44,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
-	fh := tools.FileHandler{BasePath: *ah.NamesPath}
+	fh := FileHandler{BasePath: *ah.NamesPath}
 	names, err := fh.ReadNameFile(ah.NamesPath)
 	if err != nil {
 		logger.Error("Cannot read name file at path:", ah.NamesPath.PathAsString(), "error:", err)
@@ -73,7 +72,7 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 
 	fNames := make([][]byte, 0)
 	for _, p := range *ah.DirPaths {
-		fh := tools.FileHandler{BasePath: p}
+		fh := FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
 			logger.Warn("Could not fill actors from path:", p.PathAsString())
@@ -127,10 +126,10 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 	return nil
 }
 
-func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
+func (ah *ActorHandler) createActor(name *[]byte) (models.Actor, error) {
 	if name == nil || len(*name) == 0 {
 		logger.Error("Cannot create actor from name:", name)
-		return movie.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
+		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
 	n := strings.TrimSpace(string(*name))
@@ -139,23 +138,23 @@ func (ah *ActorHandler) createActor(name *[]byte) (movie.Actor, error) {
 		parts = strings.Split(n, "_")
 	}
 
-	var a movie.Actor
+	var a models.Actor
 	switch len(parts) {
 	case 1:
-		a = movie.Actor{FirstName: &parts[0]}
+		a = models.Actor{FirstName: &parts[0]}
 	case 2:
-		a = movie.Actor{FirstName: &parts[0], LastName: &parts[1]}
+		a = models.Actor{FirstName: &parts[0], LastName: &parts[1]}
 	case 3:
-		a = movie.Actor{FirstName: &parts[0], MiddleName: &parts[1], LastName: &parts[2]}
+		a = models.Actor{FirstName: &parts[0], MiddleName: &parts[1], LastName: &parts[2]}
 	default:
 		logger.Error("Cannot parse actor name:", name)
-		return movie.Actor{}, errors.New("ActorNameInvalid")
+		return models.Actor{}, errors.New("ActorNameInvalid")
 	}
 
 	return a, nil
 }
 
-func (ah *ActorHandler) AddMovie(name string, m *movie.Movie) error {
+func (ah *ActorHandler) AddMovie(name string, m *models.Movie) error {
 	n := strings.Replace(strings.Trim(strings.ToLower(name), " "), " ", "_", -1)
 	a, has := ah.Actors[n]
 	if !has {
@@ -166,8 +165,8 @@ func (ah *ActorHandler) AddMovie(name string, m *movie.Movie) error {
 	return a.AddMovie(m)
 }
 
-func (ah *ActorHandler) Matches(name string) []*movie.Actor {
-	actors := make([]*movie.Actor, 0)
+func (ah *ActorHandler) Matches(name string) []*models.Actor {
+	actors := make([]*models.Actor, 0)
 	for _, a := range ah.Actors {
 		if a.IsMatch(name) {
 			actors = append(actors, a)
@@ -181,8 +180,8 @@ func (ah *ActorHandler) Matches(name string) []*movie.Actor {
 	return actors
 }
 
-func (ah *ActorHandler) NameMatches(name string) (actors []*movie.Actor, common string) {
-	acts := make([]*movie.Actor, 0)
+func (ah *ActorHandler) NameMatches(name string) (actors []*models.Actor, common string) {
+	acts := make([]*models.Actor, 0)
 	n := strings.ToLower(strings.Replace(name, " ", "_", -1))
 	for _, a := range ah.Actors {
 		if a.MatchWhole(n) {
@@ -278,7 +277,7 @@ func (ah *ActorHandler) PrintActors() {
 	}
 }
 
-func (ah *ActorHandler) ActorForName(name string) (actor *movie.Actor, error error) {
+func (ah *ActorHandler) ActorForName(name string) (actor *models.Actor, error error) {
 	a, has := ah.Actors[name]
 	if has {
 		return a, nil

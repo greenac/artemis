@@ -1,4 +1,4 @@
-package movie
+package utils
 
 type MovieExt string
 

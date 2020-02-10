@@ -1,4 +1,5 @@
-package config
+package models
+
 
 type ArtemisConfig struct {
 	TargetDirs      []string

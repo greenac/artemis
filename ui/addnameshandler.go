@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/greenac/artemis/handlers"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/tools"
+	"github.com/greenac/artemis/models"
 	"strings"
 )
 
@@ -18,11 +18,11 @@ type AddNamesHandler struct {
 }
 
 func (anh *AddNamesHandler) Setup(
-	movDirPaths *[]tools.FilePath,
-	actDirPaths *[]tools.FilePath,
-	actFilePath *tools.FilePath,
-	cachedNamePath *tools.FilePath,
-	toPath *tools.FilePath,
+	movDirPaths *[]models.FilePath,
+	actDirPaths *[]models.FilePath,
+	actFilePath *models.FilePath,
+	cachedNamePath *models.FilePath,
+	toPath *models.FilePath,
 ) {
 	anh.artemisHandler.Setup(movDirPaths, actDirPaths, actFilePath, cachedNamePath, toPath)
 	anh.uiHandler.Setup()

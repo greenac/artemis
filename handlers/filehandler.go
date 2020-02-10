@@ -1,15 +1,16 @@
-package tools
+package handlers
 
 import (
 	"github.com/greenac/artemis/logger"
+	"github.com/greenac/artemis/models"
 	"io"
 	"io/ioutil"
 	"os"
 )
 
 type FileHandler struct {
-	Files    *[]File
-	BasePath FilePath
+	Files    *[]models.File
+	BasePath models.FilePath
 }
 
 func (fh *FileHandler) SetFiles() error {
@@ -23,9 +24,9 @@ func (fh *FileHandler) SetFiles() error {
 		return err
 	}
 
-	files := make([]File, len(fi))
+	files := make([]models.File, len(fi))
 	for i, f := range fi {
-		files[i] = File{Info: f}
+		files[i] = models.File{Info: f}
 	}
 
 	fh.Files = &files
@@ -41,8 +42,8 @@ func (fh *FileHandler) FileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler) DirFiles() *[]File {
-	dFiles := make([]File, 0)
+func (fh *FileHandler) DirFiles() *[]models.File {
+	dFiles := make([]models.File, 0)
 	for _, f := range *fh.Files {
 		if f.IsDir() {
 			dFiles = append(dFiles, f)
@@ -62,7 +63,7 @@ func (fh *FileHandler) DirFileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler) ReadNameFile(p *FilePath) (*[][]byte, error) {
+func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 	f, err := os.Open(p.PathAsString())
 	if err != nil {
 		logger.Error("Failed to open name file at path:", p.PathAsString(), err)
