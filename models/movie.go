@@ -1,14 +1,13 @@
-package movie
+package models
 
 import (
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/tools"
 	"regexp"
 	"strings"
 )
 
 type Movie struct {
-	tools.File
+	File
 	Actors []*Actor
 }
 

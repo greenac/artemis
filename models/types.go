@@ -1,4 +1,4 @@
-package movie
+package models
 
 type MovieExt string
 

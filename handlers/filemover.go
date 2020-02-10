@@ -1,4 +1,4 @@
-package tools
+package handlers
 
 import (
 	"github.com/greenac/artemis/logger"

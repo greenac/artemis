@@ -1,4 +1,4 @@
-package tools
+package handlers
 
 type FilePath struct {
 	Path string

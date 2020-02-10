@@ -1,14 +1,15 @@
-package tools
+package handlers
 
 import (
 	"github.com/greenac/artemis/logger"
+	"github.com/greenac/artemis/models"
 	"io"
 	"io/ioutil"
 	"os"
 )
 
 type FileHandler struct {
-	Files    *[]File
+	Files    *[]models.File
 	BasePath FilePath
 }
 
@@ -23,9 +24,9 @@ func (fh *FileHandler) SetFiles() error {
 		return err
 	}
 
-	files := make([]File, len(fi))
+	files := make([]models.File, len(fi))
 	for i, f := range fi {
-		files[i] = File{Info: f}
+		files[i] = models.File{Info: f}
 	}
 
 	fh.Files = &files
@@ -41,8 +42,8 @@ func (fh *FileHandler) FileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler) DirFiles() *[]File {
-	dFiles := make([]File, 0)
+func (fh *FileHandler) DirFiles() *[]models.File {
+	dFiles := make([]models.File, 0)
 	for _, f := range *fh.Files {
 		if f.IsDir() {
 			dFiles = append(dFiles, f)

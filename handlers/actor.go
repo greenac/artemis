@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/movie"
 	"github.com/greenac/artemis/tools"
+	"github.com/greenac/artemis/models"
 	"io/ioutil"
 	"os"
 	"path"
@@ -18,7 +18,7 @@ type ActorHandler struct {
 	DirPaths   *[]tools.FilePath
 	NamesPath  *tools.FilePath
 	CachedPath *tools.FilePath
-	Actors     map[string]*movie.Actor
+	Actors     map[string]*models.Actor
 	ToPath     *tools.FilePath
 }
 
