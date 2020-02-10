@@ -13,9 +13,7 @@ type Movie struct {
 }
 
 func (m *Movie) FormattedName() (formattedName string, error error) {
-	nn := make([]byte, len(*m.Name()))
-	copy(nn, *m.Name())
-	name := strings.ToLower(string(nn))
+	name := m.RemoveRepeats()
 	parts := strings.Split(name, ".")
 	ext := parts[len(parts)-1]
 	name = strings.Join(parts[:len(parts)-1], ".")
@@ -131,4 +129,20 @@ func (m *Movie) AddActorNames() {
 	for _, a := range m.Actors {
 		m.NewName = m.AddName(a)
 	}
+}
+
+func (m *Movie) RemoveRepeats() string {
+	nn := make([]byte, len(*m.Name()))
+	copy(nn, *m.Name())
+	name := strings.ToLower(string(nn))
+	if strings.Contains(name, "scene_", ) {
+		re, err := regexp.Compile(`\\(.+?\\)`)
+		if err != nil {
+			logger.Warn("Movie::RemoveRepeats failed to compile regex with error:", err)
+		}
+
+		name = re.ReplaceAllString(name, "")
+	}
+
+	return strings.ReplaceAll(name, " copy", "")
 }
