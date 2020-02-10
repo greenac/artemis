@@ -55,7 +55,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 	for _, n := range *names {
 		a, err := ah.createActor(&n)
 		if err != nil {
-			logger.Error("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
+			logger.Warn("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
 			continue
 		}
 
