@@ -1,26 +1,23 @@
 package handlers
 
 import (
-	"github.com/greenac/artemis/tools"
-	"strings"
-)
-import (
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/movie"
+	"github.com/greenac/artemis/models"
+	"strings"
 )
 
 type ArtemisHandler struct {
 	MovieHandler  *MovieHandler
 	ActorHandler  *ActorHandler
-	UnknownMovies []movie.Movie
+	UnknownMovies []models.Movie
 }
 
 func (ah *ArtemisHandler) Setup(
-	movieDirPaths *[]tools.FilePath,
-	actorDirPaths *[]tools.FilePath,
-	actorFilePath *tools.FilePath,
-	cachedNamePath *tools.FilePath,
-	toPath *tools.FilePath,
+	movieDirPaths *[]models.FilePath,
+	actorDirPaths *[]models.FilePath,
+	actorFilePath *models.FilePath,
+	cachedNamePath *models.FilePath,
+	toPath *models.FilePath,
 ) {
 	if ah.ActorHandler == nil {
 		actHand := ActorHandler{
@@ -48,7 +45,7 @@ func (ah *ArtemisHandler) Setup(
 		ah.MovieHandler = &mh
 	}
 
-	ah.UnknownMovies = make([]movie.Movie, 0)
+	ah.UnknownMovies = make([]models.Movie, 0)
 }
 
 func (ah *ArtemisHandler) Sort() {
@@ -71,11 +68,11 @@ func (ah *ArtemisHandler) Sort() {
 	}
 }
 
-func (ah *ArtemisHandler) Actors() *map[string]*movie.Actor {
+func (ah *ArtemisHandler) Actors() *map[string]*models.Actor {
 	return &ah.ActorHandler.Actors
 }
 
-func (ah *ArtemisHandler) AddMovie(names string, movie *movie.Movie) {
+func (ah *ArtemisHandler) AddMovie(names string, movie *models.Movie) {
 	nms := strings.Split(names, ",")
 	for _, n := range nms {
 		ah.ActorHandler.AddMovie(n, movie)
@@ -88,7 +85,7 @@ func (ah *ArtemisHandler) RenameMovies() {
 			continue
 		}
 
-		mvs := make([]*movie.Movie, 0)
+		mvs := make([]*models.Movie, 0)
 		for _, m := range a.Movies {
 			mvs = append(mvs, m)
 		}

@@ -1,13 +1,14 @@
-package handlers
+package utils
 
 import (
 	"github.com/greenac/artemis/logger"
+	"github.com/greenac/artemis/models"
 	"os"
 )
 
 type FileMover struct {
-	FromPath FilePath
-	ToPath   FilePath
+	FromPath models.FilePath
+	ToPath   models.FilePath
 }
 
 func (fm *FileMover) checkPaths() bool {

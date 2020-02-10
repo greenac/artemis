@@ -10,7 +10,7 @@ import (
 
 type FileHandler struct {
 	Files    *[]models.File
-	BasePath FilePath
+	BasePath models.FilePath
 }
 
 func (fh *FileHandler) SetFiles() error {
@@ -63,7 +63,7 @@ func (fh *FileHandler) DirFileNames() *[][]byte {
 	return &names
 }
 
-func (fh *FileHandler) ReadNameFile(p *FilePath) (*[][]byte, error) {
+func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 	f, err := os.Open(p.PathAsString())
 	if err != nil {
 		logger.Error("Failed to open name file at path:", p.PathAsString(), err)

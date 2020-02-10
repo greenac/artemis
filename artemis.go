@@ -2,9 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/greenac/artemis/config"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/tools"
+	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/ui"
 	"github.com/joho/godotenv"
 	"io/ioutil"
@@ -34,26 +33,26 @@ func main() {
 		panic(err)
 	}
 
-	ac := config.ArtemisConfig{}
+	ac := models.ArtemisConfig{}
 	err = json.Unmarshal(data, &ac)
 	if err != nil {
 		logger.Error("failed to unmarshal config file json")
 		panic(err)
 	}
 
-	actNameFile := tools.FilePath{Path: ac.ActorNamesFile}
-	cachedPath := tools.FilePath{Path: ac.CachedNamesFile}
-	stagingPath := tools.FilePath{Path: ac.StagingDir}
+	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
+	cachedPath := models.FilePath{Path: ac.CachedNamesFile}
+	stagingPath := models.FilePath{Path: ac.StagingDir}
 
-	targetPaths := make([]tools.FilePath, len(ac.TargetDirs))
-	actorPaths := make([]tools.FilePath, len(ac.ActorDirs))
+	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
+	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
 
 	for i, p := range ac.TargetDirs {
-		targetPaths[i] = tools.FilePath{Path: p}
+		targetPaths[i] = models.FilePath{Path: p}
 	}
 
 	for i, p := range ac.ActorDirs {
-		actorPaths[i] = tools.FilePath{Path: p}
+		actorPaths[i] = models.FilePath{Path: p}
 	}
 
 	anh := ui.AddNamesHandler{}
