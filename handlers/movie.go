@@ -33,6 +33,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 		for _, f := range *fh.Files {
 			if utils.IsMovie(&f) {
+				logger.Debug("file:", )
 				m := models.Movie{File: f}
 				m.Path = path.Join(p.Path, *m.Name())
 				mvs = append(mvs, m)

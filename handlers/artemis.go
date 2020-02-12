@@ -63,6 +63,7 @@ func (ah *ArtemisHandler) Sort() {
 					continue
 				}
 
+				m.UpdateNewName(a)
 				found = true
 			}
 		}
