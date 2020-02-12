@@ -11,7 +11,6 @@ import (
 type AddNamesHandler struct {
 	artemisHandler handlers.ArtemisHandler
 	uiHandler      Handler
-	unkIndex       int
 	numUpdated     int
 	inputStart     int
 	addNames       []string
@@ -48,12 +47,13 @@ func (anh *AddNamesHandler) ShowUnknown() {
 	anh.uiHandler.ClearAll()
 	anh.uiHandler.ClearUI()
 
-	if anh.unkIndex == len(anh.artemisHandler.UnknownMovies) {
+	if anh.artemisHandler.MovieHandler.MoreUnknowns() {
+		logger.Log("AddNamesHandler::ShowUnknown no unknown movies")
 		anh.showComplete()
 		return
 	}
 
-	m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
+	m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
 	txts := []string{"Add name(s) to:", *m.Name()}
 	anh.uiHandler.SetHeader(txts, true)
 	anh.inputStart = anh.uiHandler.NumOfLines(Body) - 1
@@ -75,7 +75,7 @@ func (anh *AddNamesHandler) onKeyPress() {
 
 		txtStr := strings.ToLower(string(txt))
 		if txtStr == "y" || txtStr == "yes" {
-			m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
+			m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
 			for _, n := range anh.addNames {
 				a, err := anh.artemisHandler.ActorHandler.ActorForName(n)
 				if err != nil {
@@ -87,10 +87,11 @@ func (anh *AddNamesHandler) onKeyPress() {
 			}
 
 			m.AddActorNames()
-			anh.artemisHandler.MovieHandler.AddUnknownMovie(&m)
+			// FIXME: this is gonna be a bug. Figure out why
+			// anh.artemisHandler.MovieHandler.AddUnknownMovie(m)
 		}
 
-		anh.unkIndex += 1
+		anh.artemisHandler.MovieHandler.IncrementUnknownIndex()
 		anh.ShowUnknown()
 	}
 }
@@ -113,7 +114,7 @@ func (anh *AddNamesHandler) readInput() {
 		anh.uiHandler.Clear(Input)
 		anh.uiHandler.Clear(Footer)
 		anh.uiHandler.ClearUI()
-		m := anh.artemisHandler.UnknownMovies[anh.unkIndex]
+		m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
 		ftTxt := fmt.Sprint("Add name(s) ", string(txt), " to: ", *m.Name(), " (Y/N)?")
 		anh.uiHandler.AddToBody(ftTxt)
 		anh.uiHandler.CursorPosX = 0
@@ -171,4 +172,5 @@ func (anh *AddNamesHandler) handleTab() {
 
 func (anh *AddNamesHandler) AddNamesToMovies() {
 	anh.artemisHandler.RenameMovies()
+	anh.artemisHandler.MoveMovies()
 }

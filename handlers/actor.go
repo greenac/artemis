@@ -7,8 +7,6 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"io/ioutil"
-	"os"
-	"path"
 	"sort"
 	"strings"
 )
@@ -162,7 +160,7 @@ func (ah *ActorHandler) AddMovie(name string, m *models.Movie) error {
 		return errors.New("ActorNameInvalid")
 	}
 
-	return a.AddMovie(m)
+	return a.AddMovie(*m)
 }
 
 func (ah *ActorHandler) Matches(name string) []*models.Actor {
@@ -227,44 +225,6 @@ func (ah *ActorHandler) AddNameToMovies() {
 		logger.Debug("`ActorHandler::AddNameToMovies` adding name:", n, "to actor:", a.FullName())
 		for _, m := range a.Movies {
 			m.AddName(a)
-		}
-	}
-}
-
-func (ah *ActorHandler) MoveMovies() {
-	for _, a := range ah.Actors {
-		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
-		fi, err := os.Stat(ap)
-		if err != nil && os.IsNotExist(err) {
-			err = os.Mkdir(ap, 0644)
-			if err != nil {
-				logger.Error("`ActorHandler::MoveMovies` could not make directory:", ap)
-				panic(err)
-			}
-		} else if err != nil {
-			logger.Error("`ActorHandler::MoveMovies` error checking file:", err)
-			continue
-		} else if !fi.IsDir() {
-			logger.Error("`ActorHandler::MoveMovies` File at path:", ap, "is not a directory")
-			continue
-		}
-
-		for _, m := range a.Movies {
-			if m.NewPath == "" {
-				m.NewPath = path.Join(ap, m.GetNewName())
-				err = os.Rename(m.Path, m.NewPath)
-				if err != nil {
-					logger.Error("`ActorHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath)
-					panic(err)
-				}
-			} else {
-				np := path.Join(ap, m.GetNewName())
-				err = os.Symlink(m.NewPath, np)
-				if err != nil {
-					logger.Error("`ActorHandler::MoveMovies` could not symlink:", m.Path, "to:", np)
-					panic(err)
-				}
-			}
 		}
 	}
 }

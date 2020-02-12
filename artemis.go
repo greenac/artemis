@@ -21,6 +21,8 @@ func main() {
 		logger.Setup(lp)
 	}
 
+	logger.Log("Starting artemis...")
+
 	cp := os.Getenv("CONFIG_PATH")
 	if cp == "" {
 		logger.Error("No config path set")

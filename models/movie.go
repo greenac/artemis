@@ -113,6 +113,8 @@ func (m *Movie) GetNewName() string {
 			return ""
 		}
 
+
+
 		m.NewName = nn
 	}
 
