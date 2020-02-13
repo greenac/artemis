@@ -1,10 +1,9 @@
 package models
 
-
 type ArtemisConfig struct {
-	TargetDirs      []string
-	ActorDirs       []string
-	ActorNamesFile  string
-	CachedNamesFile string
-	StagingDir      string
+	TargetDirs      []string `json:"targetDirs"`
+	ActorDirs       []string `json:"actorDirs"`
+	ActorNamesFile  string   `json:"actorNamesFile"`
+	CachedNamesFile string   `json:"cachedNamesFile"`
+	StagingDir      string   `json:"stagingDir"`
 }

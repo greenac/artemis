@@ -77,22 +77,22 @@ func (a *Actor) FullName() string {
 	return strings.ToLower(name)
 }
 
-func (a *Actor) AddMovie(m *Movie) error {
+func (a *Actor) AddMovie(m Movie) error {
 	a.setup()
 	_, has := a.Movies[*m.Name()]
 	if has {
-		logger.Warn("Can't add movie:", *m.Name(), "The actor already has a movie of that name")
+		logger.Warn("Can't add movie:", m.Name(), "duplicate name")
 		return errors.New("DuplicateMovieName")
 	}
 
-	a.Movies[*m.Name()] = m
+	a.Movies[*m.Name()] = &m
 
 	return nil
 }
 
 func (a *Actor) AddFiles(mvs []*Movie) {
 	for _, m := range mvs {
-		err := a.AddMovie(m)
+		err := a.AddMovie(*m)
 		if err != nil {
 			logger.Warn("`Actor::AddFiles` failed to add:", m.Name(), "to:", a.FullName())
 		}

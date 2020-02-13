@@ -9,7 +9,7 @@ type MovieFileHandler struct {
 	FileHandler
 }
 
-func (mfh *MovieFileHandler)  MovieFiles() *[]models.File {
+func (mfh *MovieFileHandler) MovieFiles() *[]models.File {
 	movieFiles := make([]models.File, 0)
 	for _, f := range *mfh.Files {
 		if utils.IsMovie(&f) {
