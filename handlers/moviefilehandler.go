@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/greenac/artemis/models"
-	"github.com/greenac/artemis/utils"
 )
 
 type MovieFileHandler struct {
@@ -12,7 +11,7 @@ type MovieFileHandler struct {
 func (mfh *MovieFileHandler) MovieFiles() *[]models.File {
 	movieFiles := make([]models.File, 0)
 	for _, f := range *mfh.Files {
-		if utils.IsMovie(&f) {
+		if f.IsMovie() {
 			movieFiles = append(movieFiles, f)
 		}
 	}

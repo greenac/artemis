@@ -2,9 +2,12 @@ package models
 
 import (
 	"github.com/greenac/artemis/logger"
+	"github.com/greenac/artemis/utils"
 	"regexp"
 	"strings"
 )
+
+
 
 type Movie struct {
 	File
@@ -73,41 +76,23 @@ func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
 }
 
 func (m *Movie) AddName(a *Actor) string {
-	fn := a.FullName()
-	if strings.Contains(m.NewName, fn) {
-		return m.NewName
+	newName := m.NewName
+	newName = utils.AddPrecedingUnderscore(*a.FirstName, newName)
+	newName = utils.AddFollowingUnderscore(*a.FirstName, newName)
+
+	if a.MiddleName != nil {
+		newName = utils.AddMiddleUnderscore(*a.FirstName, *a.MiddleName, newName)
+		newName = utils.AddFollowingUnderscore(*a.MiddleName, newName)
+		if a.LastName != nil {
+			newName = utils.AddMiddleUnderscore(*a.MiddleName, *a.LastName, newName)
+			newName = utils.AddFollowingUnderscore(*a.LastName, newName)
+		}
+	} else if a.LastName != nil {
+		newName = utils.AddMiddleUnderscore(*a.FirstName, *a.LastName, newName)
+		newName = utils.AddFollowingUnderscore(*a.LastName, newName)
 	}
 
-	var nn string
-	i := strings.Index(m.NewName, *a.FirstName)
-	if i == -1 {
-		pts := strings.Split(m.NewName, ".")
-		if len(pts) != 2 {
-			logger.Warn("`Movie::Rename`", m.NewName, "not in proper format")
-			return m.NewName
-		}
-
-		nm := pts[0]
-		nmb := []byte(nm)
-
-		if !strings.Contains(nm, fn) {
-			if nmb[len(nmb)-1] == '_' {
-				nm += fn
-			} else {
-				nm += "_" + fn
-			}
-		}
-
-		nn = nm + "." + pts[1]
-	} else {
-		nn = strings.ReplaceAll(m.NewName, *a.FirstName, fn)
-	}
-
-	logger.Debug("Before Adding name:", a.FullName(), "to movie:", nn)
-	nn = m.addFullName(a, nn)
-	logger.Debug("After Adding name:", a.FullName(), "to movie:", nn)
-
-	return nn
+	return newName
 }
 
 func (m *Movie) UpdateNewName(a *Actor) {

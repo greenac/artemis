@@ -1,66 +1,76 @@
 package utils
 
 import (
-	"errors"
-	"fmt"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/models"
-	"regexp"
 	"strings"
 )
 
-func FormatMovieName(f *models.File) (*[]byte, error) {
-	nn := make([]byte, len(*f.Name()))
-	copy(nn, *f.Name())
-	fmt.Println("old name:", string(nn))
-	name := strings.ToLower(string(nn))
-	ext := ""
-	if IsMovie(f) {
-		parts := strings.Split(name, ".")
-		ext = parts[len(parts)-1]
-		name = strings.Join(parts[:len(parts)-1], ".")
+func AddFollowingUnderscore(an string, mn string) string {
+	i := strings.Index(mn, an)
+	if i == -1 {
+		return mn
 	}
 
-	re, err := regexp.Compile(`[-\s\t!@#$%^&*()[\]<>,.?~]`)
-	if err != nil {
-		fmt.Println("Cannot format name compiling:", err)
-		return nil, err
+	mnr := []rune(mn)
+	ti := i + len(an)
+	if ti > len(mnr)-1 {
+		return mn
 	}
 
-	rs := re.ReplaceAll(nn, []byte{'_'})
-	fmt.Println("matched:", string(rs))
+	if mnr[ti] == '_' || mnr[ti] == '.' {
+		return mn
+	}
 
-	newName := append([]byte(string(rs)), []byte(string(ext))...)
-	fmt.Println("new file name:", newName)
-	return &newName, nil
+	return addUnderscoreAtIndex(&mnr, ti)
 }
 
-func IsMovie(f *models.File) bool {
-	mt, err := MovieType(f)
-	if err != nil {
-		return false
+func AddPrecedingUnderscore(an string, mn string) string {
+	i := strings.Index(mn, an)
+	if i == -1 {
+		return mn
 	}
 
-	return mt != nil
+	mnr := []rune(mn)
+	if i == 0 {
+		return mn
+	}
+
+	logger.Log("character at:", i, "is:", string(mnr[i]))
+
+	if mnr[i-1] == '_' {
+		return mn
+	}
+
+	return addUnderscoreAtIndex(&mnr, i)
 }
 
-func MovieType(f *models.File) (*MovieExt, error) {
-	if f.IsDir() {
-		return nil, errors.New("NotMovie")
+func AddMiddleUnderscore(n1 string, n2 string, mn string) string {
+	i1 := strings.Index(mn, n1)
+	if i1 == -1 {
+		return mn
 	}
 
-	parts := strings.Split(*f.Name(), ".")
-	if len(parts) == 1 {
-		return nil, errors.New("NotMovie")
+	i2 := strings.Index(mn, n1)
+	if i2 == -1 {
+		return mn
 	}
 
-	movExt := MovieExt(strings.ToLower(parts[len(parts)-1]))
-	exts := *MovieExtsHash()
-	_, has := exts[movExt]
-	if !has {
-		logger.Error("`MovieType` Unknown movie type:", movExt)
-		return nil, errors.New("UnknownMovieType")
+	mnr := []rune(mn)
+	if len(n1) + len(n2) >= len(mnr) {
+		return mn
 	}
 
-	return &movExt, nil
+	if i1+len(n1) != i2 {
+		return mn
+	}
+
+
+	return addUnderscoreAtIndex(&mnr, i2)
+}
+
+func addUnderscoreAtIndex(rp *[]rune, i int) string {
+	mnr := *rp
+	mnr = append(mnr[:i], append([]rune{'_'}, mnr[i:]...)...)
+
+	return string(mnr)
 }
