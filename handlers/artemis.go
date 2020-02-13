@@ -50,19 +50,19 @@ func (ah *ArtemisHandler) Setup(
 }
 
 func (ah *ArtemisHandler) Sort() {
-	for _, m := range *ah.MovieHandler.Movies {
+	for _, m := range ah.MovieHandler.Movies {
 		m.GetNewName()
-		found := false
+		isKnown := false
 
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
 				m.AddActor(*a)
 				m.UpdateNewName(a)
-				found = true
+				isKnown = true
 			}
 		}
 
-		if found {
+		if isKnown {
 			ah.MovieHandler.AddKnownMovie(m)
 		} else {
 			ah.MovieHandler.AddUnknownMovie(m)
@@ -98,7 +98,7 @@ func (ah *ArtemisHandler) MoveMovies() {
 	for _, m := range mvs {
 		a := m.Actors[0]
 		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
-		logger.Debug("moving to actor path:", ap)
+
 		fi, err := os.Stat(ap)
 		if err != nil && os.IsNotExist(err) {
 			err = os.Mkdir(ap, 0775)
@@ -115,10 +115,8 @@ func (ah *ArtemisHandler) MoveMovies() {
 		}
 
 		m.NewPath = path.Join(ap, m.GetNewName())
-
-		logger.Log("actor path:", ap, m.GetNewName(), m.NewPath)
-
 		err = os.Rename(m.Path, m.NewPath)
+
 		if err != nil {
 			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath, err)
 			panic(err)

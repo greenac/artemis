@@ -9,7 +9,7 @@ import (
 
 type MovieHandler struct {
 	DirPaths      *[]models.FilePath
-	Movies        *[]models.Movie
+	Movies        []models.Movie
 	NewToPath     *models.FilePath
 	KnownMovies   []*models.Movie
 	UnknownMovies []*models.Movie
@@ -40,7 +40,7 @@ func (mh *MovieHandler) SetMovies() error {
 		}
 	}
 
-	mh.Movies = &mvs
+	mh.Movies = mvs
 	return nil
 }
 
@@ -59,7 +59,7 @@ func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
 	fh := FileHandler{}
 	err := fh.Rename(m.Path, m.RenamePath())
 	if err != nil {
-		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "failed to be renamed with error:", err)
+		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Path, "failed to be renamed with error:", err)
 		return err
 	}
 
@@ -67,7 +67,7 @@ func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
 }
 
 func (mh *MovieHandler) AddKnownMovie(m models.Movie) {
-	mh.KnownMovies = append(mh.UnknownMovies, &m)
+	mh.KnownMovies = append(mh.KnownMovies, &m)
 }
 
 func (mh *MovieHandler) AddUnknownMovie(m models.Movie) {
@@ -91,7 +91,6 @@ func (mh *MovieHandler) AddUnknownMovieNames() {
 }
 
 func (mh *MovieHandler) RenameAllMovies() {
-
 	mvs := make([]*models.Movie, 0)
 	for _, m := range mh.KnownMovies {
 		if m.NewName != m.Info.Name() {

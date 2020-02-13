@@ -15,7 +15,9 @@ type Movie struct {
 }
 
 func (m *Movie) AddActor(a Actor) {
+	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current actors:", len(m.Actors))
 	m.Actors = append(m.Actors, &a)
+	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current after actors:", len(m.Actors))
 }
 
 func (m *Movie) AddActorNames() {

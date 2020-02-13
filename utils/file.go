@@ -22,3 +22,7 @@ func AppendTxtToFile(filePath string, txt string) error {
 
 	return err
 }
+
+func CreateDir(dirPath string) error {
+
+}
