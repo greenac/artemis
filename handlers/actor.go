@@ -6,6 +6,7 @@ import (
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
+	"github.com/greenac/artemis/utils"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -126,7 +127,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 
 func (ah *ActorHandler) createActor(name *[]byte) (models.Actor, error) {
 	if name == nil || len(*name) == 0 {
-		logger.Error("Cannot create actor from name:", name)
+		logger.Error("ActorHandler::createActor cannot create actor from name:", name)
 		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
@@ -150,17 +151,6 @@ func (ah *ActorHandler) createActor(name *[]byte) (models.Actor, error) {
 	}
 
 	return a, nil
-}
-
-func (ah *ActorHandler) AddMovie(name string, m *models.Movie) error {
-	n := strings.Replace(strings.Trim(strings.ToLower(name), " "), " ", "_", -1)
-	a, has := ah.Actors[n]
-	if !has {
-		logger.Warn("Cannot add movie:", *m.Name(), "to actor:", n, "no actor with that name")
-		return errors.New("ActorNameInvalid")
-	}
-
-	return a.AddMovie(*m)
 }
 
 func (ah *ActorHandler) Matches(name string) []*models.Actor {
@@ -219,16 +209,6 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*models.Actor, common
 	return acts, string(comp)
 }
 
-func (ah *ActorHandler) AddNameToMovies() {
-	for _, a := range ah.Actors {
-		n := a.FullName()
-		logger.Debug("`ActorHandler::AddNameToMovies` adding name:", n, "to actor:", a.FullName())
-		for _, m := range a.Movies {
-			m.AddName(a)
-		}
-	}
-}
-
 func (ah *ActorHandler) PrintActors() {
 	i := 1
 	for _, actor := range ah.Actors {
@@ -244,4 +224,42 @@ func (ah *ActorHandler) ActorForName(name string) (actor *models.Actor, error er
 	}
 
 	return nil, artemiserror.New(artemiserror.InvalidName)
+}
+
+func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
+	a, has := ah.Actors[name]
+	if has {
+		return a, nil
+	}
+
+	bName := []byte(name)
+	act, err := ah.createActor(&bName)
+	if err != nil {
+		return nil, err
+	}
+
+	ah.Actors[name] = &act
+
+	err = utils.AppendTxtToFile(ah.NamesPath.Path, name)
+	if err != nil {
+		logger.Warn("ActorHandler::AddNewActor failed to write name:", name, "to names file", ah.NamesPath.Path)
+	}
+
+	return &act, nil
+}
+
+func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.Movie) {
+	input = strings.ToLower(input)
+	nms := strings.Split(input, ",")
+	for _, n := range nms {
+		nn := strings.ReplaceAll(strings.TrimSpace(n), " ", "_")
+		a, err := ah.ActorForName(nn)
+		if err != nil {
+			a, err = ah.AddNewActor(nn)
+		}
+
+		if err == nil {
+			movie.AddActor(*a)
+		}
+	}
 }

@@ -1,9 +1,7 @@
 package models
 
 import (
-	"errors"
 	"github.com/fatih/structs"
-	"github.com/greenac/artemis/logger"
 	"strings"
 )
 
@@ -19,13 +17,6 @@ type Actor struct {
 	FirstName  *string
 	LastName   *string
 	MiddleName *string
-	Movies     map[string]*Movie
-}
-
-func (a *Actor) setup() {
-	if a.Movies == nil {
-		a.Movies = make(map[string]*Movie, 0)
-	}
 }
 
 func (a *Actor) GetFirstName() string {
@@ -75,28 +66,6 @@ func (a *Actor) FullName() string {
 	}
 
 	return strings.ToLower(name)
-}
-
-func (a *Actor) AddMovie(m Movie) error {
-	a.setup()
-	_, has := a.Movies[*m.Name()]
-	if has {
-		logger.Warn("Can't add movie:", m.Name(), "duplicate name")
-		return errors.New("DuplicateMovieName")
-	}
-
-	a.Movies[*m.Name()] = &m
-
-	return nil
-}
-
-func (a *Actor) AddFiles(mvs []*Movie) {
-	for _, m := range mvs {
-		err := a.AddMovie(*m)
-		if err != nil {
-			logger.Warn("`Actor::AddFiles` failed to add:", m.Name(), "to:", a.FullName())
-		}
-	}
 }
 
 func (a *Actor) IsIn(m *Movie) bool {

@@ -5,7 +5,6 @@ import (
 	"github.com/greenac/artemis/models"
 	"os"
 	"path"
-	"strings"
 )
 
 type ArtemisHandler struct {
@@ -57,18 +56,15 @@ func (ah *ArtemisHandler) Sort() {
 
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
-				err := a.AddMovie(m)
-				if err != nil {
-					logger.Warn("`ArtemisHandler::Sort` could not add movie:", m, "for actor:", a.FullName())
-					continue
-				}
-
+				m.AddActor(*a)
 				m.UpdateNewName(a)
 				found = true
 			}
 		}
 
-		if !found {
+		if found {
+			ah.MovieHandler.AddKnownMovie(m)
+		} else {
 			ah.MovieHandler.AddUnknownMovie(m)
 		}
 	}
@@ -78,50 +74,29 @@ func (ah *ArtemisHandler) Actors() *map[string]*models.Actor {
 	return &ah.ActorHandler.Actors
 }
 
-func (ah *ArtemisHandler) AddMovie(names string, movie *models.Movie) {
-	nms := strings.Split(names, ",")
-	for _, n := range nms {
-		ah.ActorHandler.AddMovie(n, movie)
-	}
-}
-
 func (ah *ArtemisHandler) RenameMovies() {
-	for _, a := range ah.ActorHandler.Actors {
-		if len(a.Movies) == 0 {
-			continue
-		}
-
-		mvs := make([]*models.Movie, 0)
-		for _, m := range a.Movies {
-			mvs = append(mvs, m)
-		}
-
-		ah.MovieHandler.RenameMovies(mvs)
-	}
-
+	ah.MovieHandler.AddKnownMovieNames()
 	ah.MovieHandler.AddUnknownMovieNames()
-	ah.MovieHandler.RenameUnknownMovies()
+	ah.MovieHandler.RenameAllMovies()
 }
 
 func (ah *ArtemisHandler) MoveMovies() {
-	for _, m := range ah.MovieHandler.UnknownMovies {
-		if len(m.Actors) == 0 {
-			continue
-		}
+	mvs := make([]*models.Movie, 0)
 
-		a := m.Actors[0]
-		m.Actors = nil
-		err := a.AddMovie(*m)
-		if err != nil {
-			logger.Warn("ArtemisHandler::MoveMovies could not add unknown movie with error:", err)
+	for _, m := range ah.MovieHandler.KnownMovies {
+		if len(m.Actors) > 0 {
+			mvs = append(mvs, m)
 		}
 	}
 
-	for _, a := range ah.ActorHandler.Actors {
-		if len(a.Movies) == 0 {
-			continue
+	for _, m := range ah.MovieHandler.UnknownMovies {
+		if m.NewName != "" && *m.Name() != m.NewName && len(m.Actors) > 0{
+			mvs = append(mvs, m)
 		}
+	}
 
+	for _, m := range mvs {
+		a := m.Actors[0]
 		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
 		logger.Debug("moving to actor path:", ap)
 		fi, err := os.Stat(ap)
@@ -139,14 +114,14 @@ func (ah *ArtemisHandler) MoveMovies() {
 			continue
 		}
 
-		for _, m := range a.Movies {
-			m.NewPath = path.Join(ap, m.GetNewName())
-			logger.Log("actor path:", ap, m.GetNewName(), m.NewPath)
-			err = os.Rename(m.Path, m.NewPath)
-			if err != nil {
-				logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath, err)
-				panic(err)
-			}
+		m.NewPath = path.Join(ap, m.GetNewName())
+
+		logger.Log("actor path:", ap, m.GetNewName(), m.NewPath)
+
+		err = os.Rename(m.Path, m.NewPath)
+		if err != nil {
+			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath, err)
+			panic(err)
 		}
 	}
 }
