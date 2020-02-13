@@ -5,7 +5,6 @@ import (
 	"testing"
 )
 
-
 func TestMovie_AddNameNoUnderscores(t *testing.T) {
 	expected := "a_river_runs_through_it_brad_pitt.mp4"
 

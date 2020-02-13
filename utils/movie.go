@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"github.com/greenac/artemis/logger"
 	"strings"
 )
 
@@ -35,8 +34,6 @@ func AddPrecedingUnderscore(an string, mn string) string {
 		return mn
 	}
 
-	logger.Log("character at:", i, "is:", string(mnr[i]))
-
 	if mnr[i-1] == '_' {
 		return mn
 	}
@@ -56,14 +53,13 @@ func AddMiddleUnderscore(n1 string, n2 string, mn string) string {
 	}
 
 	mnr := []rune(mn)
-	if len(n1) + len(n2) >= len(mnr) {
+	if len(n1)+len(n2) >= len(mnr) {
 		return mn
 	}
 
 	if i1+len(n1) != i2 {
 		return mn
 	}
-
 
 	return addUnderscoreAtIndex(&mnr, i2)
 }

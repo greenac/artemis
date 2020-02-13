@@ -108,10 +108,10 @@ func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 }
 
 func (fh *FileHandler) Rename(oldName string, newName string) error {
-	_, err := os.Stat(newName)
+	_, err := os.Stat(oldName)
 	if err != nil {
 		if os.IsNotExist(err) {
-			logger.Debug("`FileHandler::Rename` Renaming:", oldName, "to:", newName)
+			logger.Debug("`FileHandler::Rename` Renaming:", oldName, "to:", newName, "with error:", err)
 			return os.Rename(oldName, newName)
 		}
 
@@ -120,7 +120,6 @@ func (fh *FileHandler) Rename(oldName string, newName string) error {
 
 	return nil
 }
-
 
 type FileMover struct {
 	FromPath models.FilePath

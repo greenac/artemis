@@ -17,20 +17,19 @@ func createActorAndModel(fileName string, middleName string) (actor *models.Acto
 	}
 
 	a := models.Actor{
-		FirstName: &fn,
-		LastName: &ln,
+		FirstName:  &fn,
+		LastName:   &ln,
 		MiddleName: mn,
-		Movies: nil,
 	}
 
 	m := models.Movie{
 		File: models.File{
-			Path: "/path/to/movie",
-			Info: fi,
+			Path:    "/path/to/movie",
+			Info:    fi,
 			NewName: "",
 			NewPath: "",
 		},
-		Actors:nil,
+		Actors: []*models.Actor{&a},
 	}
 
 	return &a, &m

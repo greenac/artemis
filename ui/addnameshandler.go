@@ -13,7 +13,7 @@ type AddNamesHandler struct {
 	uiHandler      Handler
 	numUpdated     int
 	inputStart     int
-	addNames       []string
+	addNames       string
 }
 
 func (anh *AddNamesHandler) Setup(
@@ -76,19 +76,7 @@ func (anh *AddNamesHandler) onKeyPress() {
 		txtStr := strings.ToLower(string(txt))
 		if txtStr == "y" || txtStr == "yes" {
 			m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
-			for _, n := range anh.addNames {
-				a, err := anh.artemisHandler.ActorHandler.ActorForName(n)
-				if err != nil {
-					logger.Warn("`AddNamesHandler::onKeyPress` no actor for name:", n)
-					continue
-				}
-
-				m.AddActor(a)
-			}
-
-			m.AddActorNames()
-			// FIXME: this is gonna be a bug. Figure out why
-			// anh.artemisHandler.MovieHandler.AddUnknownMovie(m)
+			anh.artemisHandler.ActorHandler.AddActorsToMovieWithInput(anh.addNames, m)
 		}
 
 		anh.artemisHandler.MovieHandler.IncrementUnknownIndex()
@@ -104,12 +92,9 @@ func (anh *AddNamesHandler) readInput() {
 			txt = append(txt, l.Text...)
 		}
 
-		names := make([]string, 0)
-		for _, n := range strings.Split(string(txt), ",") {
-			names = append(names, strings.Trim(n, " "))
-		}
+		namesTxt := string(txt)
+		anh.addNames = namesTxt
 
-		anh.addNames = names
 		anh.uiHandler.Clear(Body)
 		anh.uiHandler.Clear(Input)
 		anh.uiHandler.Clear(Footer)
@@ -128,7 +113,7 @@ func (anh *AddNamesHandler) readInput() {
 		anh.uiHandler.Clear(Input)
 		anh.uiHandler.SiftLines()
 		anh.uiHandler.CursorPosX = 0
-		anh.uiHandler.AddToFooter(fmt.Sprint("going to write: ", strings.Join(anh.addNames, ", "), " length:", len(anh.addNames)))
+		anh.uiHandler.AddToFooter(fmt.Sprint("going to write: ", anh.addNames))
 		anh.uiHandler.DrawAll()
 	}
 }

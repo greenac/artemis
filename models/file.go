@@ -2,10 +2,10 @@ package models
 
 import (
 	"errors"
+	"github.com/greenac/artemis/logger"
 	"os"
 	"path"
 	"strings"
-	"github.com/greenac/artemis/logger"
 )
 
 type MovieExt string
@@ -24,7 +24,6 @@ var movieExts = [12]MovieExt{
 	"rmvb",
 	"si",
 }
-
 
 var movHash *map[MovieExt]int
 

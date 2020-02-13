@@ -7,11 +7,23 @@ import (
 	"strings"
 )
 
-
-
 type Movie struct {
 	File
 	Actors []*Actor
+}
+
+func (m *Movie) AddActor(a Actor) {
+	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current actors:", len(m.Actors))
+	m.Actors = append(m.Actors, &a)
+	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current after actors:", len(m.Actors))
+}
+
+func (m *Movie) AddActorNames() {
+	m.GetNewName()
+
+	for _, a := range m.Actors {
+		m.UpdateNewName(a)
+	}
 }
 
 func (m *Movie) FormattedName() (formattedName string, error error) {
@@ -112,17 +124,6 @@ func (m *Movie) GetNewName() string {
 	return m.NewName
 }
 
-func (m *Movie) AddActor(a *Actor) {
-	m.Actors = append(m.Actors, a)
-}
-
-func (m *Movie) AddActorNames() {
-	m.GetNewName()
-	for _, a := range m.Actors {
-		m.UpdateNewName(a)
-	}
-}
-
 func (m *Movie) removeRepeats() string {
 	nn := make([]byte, len(*m.Name()))
 	copy(nn, *m.Name())
@@ -137,63 +138,4 @@ func (m *Movie) removeRepeats() string {
 	}
 
 	return strings.ReplaceAll(name, " copy", "")
-}
-
-func (m *Movie) addFullName(a *Actor, newName string) string {
-	fn := a.FullName()
-
-	logger.Log("Running with new name:", newName, "for:", fn)
-
-	if strings.Contains(newName, fn) {
-		return newName
-	}
-
-	if a.MiddleName == nil {
-		i := strings.Index(newName, *a.FirstName)
-		if i != -1 {
-			nrns := []rune(newName)
-			if i > 0 {
-				if nrns[i-1] != '_' {
-					logger.Log("Should insert _ here at", i-1)
-					nrns = append(nrns[:i], append([]rune{'_'}, nrns[i:]...)...)
-					newName = string(nrns)
-					logger.Log("New name for nrns[i-1] != '_':", newName)
-					i += 1
-				}
-			}
-
-			if i < len(nrns)-1 {
-				t := i + len(*a.FirstName)
-				if nrns[t] != '_' {
-					if a.LastName == nil {
-						nrns = append(nrns[:t], append([]rune{'_'}, nrns[t:]...)...)
-						logger.Log("new name:", newName)
-					} else {
-						li := strings.Index(newName, *a.LastName)
-						logger.Log("last name starts at:", li, "t:", t)
-						if li == t {
-							nrns = append(nrns[:li], append([]rune{'_'}, nrns[li:]...)...)
-							li += 1
-							logger.Log("new with _ in middle of name is:", string(nrns))
-						}
-
-						li += len(*a.LastName)
-						logger.Log("target value:", string(nrns[li]))
-						if nrns[li] != '.' && nrns[li] != '_' {
-							nrns = append(nrns[:li], append([]rune{'_'}, nrns[li:]...)...)
-							logger.Log("new at end of last name is:", string(nrns))
-						}
-					}
-
-					newName = string(nrns)
-				}
-			}
-
-			newName = strings.ReplaceAll(newName, *a.FirstName, fn)
-		}
-	} else if strings.Contains(newName, *a.FirstName+"_"+*a.LastName) {
-		newName = strings.ReplaceAll(newName, *a.FirstName+"_"+*a.LastName, fn)
-	}
-
-	return newName
 }
