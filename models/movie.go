@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-
-
 type Movie struct {
 	File
 	Actors []*Actor

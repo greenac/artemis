@@ -3,7 +3,7 @@ package handlers
 import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"os"
+	"github.com/greenac/artemis/utils"
 	"path"
 )
 
@@ -90,7 +90,7 @@ func (ah *ArtemisHandler) MoveMovies() {
 	}
 
 	for _, m := range ah.MovieHandler.UnknownMovies {
-		if m.NewName != "" && *m.Name() != m.NewName && len(m.Actors) > 0{
+		if m.NewName != "" && *m.Name() != m.NewName && len(m.Actors) > 0 {
 			mvs = append(mvs, m)
 		}
 	}
@@ -99,24 +99,14 @@ func (ah *ArtemisHandler) MoveMovies() {
 		a := m.Actors[0]
 		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
 
-		fi, err := os.Stat(ap)
-		if err != nil && os.IsNotExist(err) {
-			err = os.Mkdir(ap, 0775)
-			if err != nil {
-				logger.Error("`ArtemisHandler::MoveMovies` could not make directory:", ap)
-				panic(err)
-			}
-		} else if err != nil {
-			logger.Error("`ArtemisHandler::MoveMovies` error checking file:", err)
-			continue
-		} else if !fi.IsDir() {
-			logger.Error("`ArtemisHandler::MoveMovies` File at path:", ap, "is not a directory")
+		err := utils.CreateDir(ap)
+		if err != nil {
+			logger.Warn("`ArtemisHandler::MoveMovies` create directory:", ap)
 			continue
 		}
 
 		m.NewPath = path.Join(ap, m.GetNewName())
-		err = os.Rename(m.Path, m.NewPath)
-
+		err = utils.RenameFile(m.Path, m.NewPath)
 		if err != nil {
 			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath, err)
 			panic(err)

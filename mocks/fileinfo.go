@@ -1,11 +1,9 @@
 package mocks
 
-
 import (
-"os"
-"time"
+	"os"
+	"time"
 )
-
 
 type MockFileInfo struct {
 	MockName string
@@ -31,6 +29,6 @@ func (mfi MockFileInfo) IsDir() bool {
 	return false
 }
 
-func (mfi MockFileInfo) Sys() interface{}  {
+func (mfi MockFileInfo) Sys() interface{} {
 	return nil
 }

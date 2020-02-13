@@ -53,14 +53,13 @@ func AddMiddleUnderscore(n1 string, n2 string, mn string) string {
 	}
 
 	mnr := []rune(mn)
-	if len(n1) + len(n2) >= len(mnr) {
+	if len(n1)+len(n2) >= len(mnr) {
 		return mn
 	}
 
 	if i1+len(n1) != i2 {
 		return mn
 	}
-
 
 	return addUnderscoreAtIndex(&mnr, i2)
 }

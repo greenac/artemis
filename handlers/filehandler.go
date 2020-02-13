@@ -121,7 +121,6 @@ func (fh *FileHandler) Rename(oldName string, newName string) error {
 	return nil
 }
 
-
 type FileMover struct {
 	FromPath models.FilePath
 	ToPath   models.FilePath
