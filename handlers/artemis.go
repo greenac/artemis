@@ -9,9 +9,9 @@ import (
 )
 
 type ArtemisHandler struct {
-	MovieHandler  *MovieHandler
-	ActorHandler  *ActorHandler
-	ToPath *models.FilePath
+	MovieHandler *MovieHandler
+	ActorHandler *ActorHandler
+	ToPath       *models.FilePath
 }
 
 func (ah *ArtemisHandler) Setup(

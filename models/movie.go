@@ -25,7 +25,7 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 
 	rs := re.ReplaceAll([]byte(name), []byte{'_'})
 
-	return  string(*(m.cleanUnderscores(&rs))) + "." + ext, nil
+	return string(*(m.cleanUnderscores(&rs))) + "." + ext, nil
 }
 
 func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
@@ -142,7 +142,7 @@ func (m *Movie) removeRepeats() string {
 	nn := make([]byte, len(*m.Name()))
 	copy(nn, *m.Name())
 	name := strings.ToLower(string(nn))
-	if strings.Contains(name, "scene_", ) {
+	if strings.Contains(name, "scene_") {
 		re, err := regexp.Compile(`\\(.+?\\)`)
 		if err != nil {
 			logger.Warn("Movie::RemoveRepeats failed to compile regex with error:", err)
@@ -169,7 +169,7 @@ func (m *Movie) addFullName(a *Actor, newName string) string {
 			nrns := []rune(newName)
 			if i > 0 {
 				if nrns[i-1] != '_' {
-					logger.Log("Should insert _ here at", i - 1)
+					logger.Log("Should insert _ here at", i-1)
 					nrns = append(nrns[:i], append([]rune{'_'}, nrns[i:]...)...)
 					newName = string(nrns)
 					logger.Log("New name for nrns[i-1] != '_':", newName)
@@ -177,7 +177,7 @@ func (m *Movie) addFullName(a *Actor, newName string) string {
 				}
 			}
 
-			if i < len(nrns) - 1 {
+			if i < len(nrns)-1 {
 				t := i + len(*a.FirstName)
 				if nrns[t] != '_' {
 					if a.LastName == nil {
@@ -206,8 +206,8 @@ func (m *Movie) addFullName(a *Actor, newName string) string {
 
 			newName = strings.ReplaceAll(newName, *a.FirstName, fn)
 		}
-	} else if strings.Contains(newName, *a.FirstName + "_" + *a.LastName) {
-		newName = strings.ReplaceAll(newName, *a.FirstName + "_" + *a.LastName, fn)
+	} else if strings.Contains(newName, *a.FirstName+"_"+*a.LastName) {
+		newName = strings.ReplaceAll(newName, *a.FirstName+"_"+*a.LastName, fn)
 	}
 
 	return newName

@@ -13,7 +13,7 @@ type MovieHandler struct {
 	Movies        *[]models.Movie
 	NewToPath     *models.FilePath
 	UnknownMovies []*models.Movie
-	unkIndex int
+	unkIndex      int
 }
 
 func (mh *MovieHandler) SetMovies() error {
@@ -33,7 +33,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 		for _, f := range *fh.Files {
 			if utils.IsMovie(&f) {
-				logger.Debug("file:", )
+				logger.Debug("file:")
 				m := models.Movie{File: f}
 				m.Path = path.Join(p.Path, *m.Name())
 				mvs = append(mvs, m)
@@ -103,8 +103,7 @@ func (mh *MovieHandler) AddUnknownMovie(m models.Movie) {
 	//
 	//	unknowns = append(unknowns[:t], append([]*models.Movie{&m}, unknowns[t:]...)...)
 
-
-		//logger.Debug("Unknowns has length after;", len(unknowns), unknowns)
+	//logger.Debug("Unknowns has length after;", len(unknowns), unknowns)
 	//}
 
 	//mh.UnknownMovies = unknowns
@@ -122,7 +121,7 @@ func (mh *MovieHandler) AddUnknownMovieNames() {
 
 func (mh *MovieHandler) RenameUnknownMovies() {
 	mvs := make([]*models.Movie, 0)
-	for _, m := range(mh.UnknownMovies) {
+	for _, m := range mh.UnknownMovies {
 		if m.NewName != m.Info.Name() {
 			mvs = append(mvs, m)
 		}
@@ -142,5 +141,5 @@ func (mh *MovieHandler) CurrentUnknownMovie() *models.Movie {
 }
 
 func (mh *MovieHandler) MoreUnknowns() bool {
-	return mh.unkIndex >=  len(mh.UnknownMovies)
+	return mh.unkIndex >= len(mh.UnknownMovies)
 }
