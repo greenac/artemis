@@ -1,10 +1,45 @@
 package models
 
 import (
+	"errors"
 	"os"
 	"path"
 	"strings"
+	"github.com/greenac/artemis/logger"
 )
+
+type MovieExt string
+
+var movieExts = [12]MovieExt{
+	"mp4",
+	"wmv",
+	"avi",
+	"mpg",
+	"mpeg",
+	"mov",
+	"asf",
+	"mkv",
+	"flv",
+	"m4v",
+	"rmvb",
+	"si",
+}
+
+
+var movHash *map[MovieExt]int
+
+func MovieExtsHash() *map[MovieExt]int {
+	if movHash == nil {
+		mh := make(map[MovieExt]int, len(movieExts))
+		for _, ext := range movieExts {
+			mh[ext] = 0
+		}
+
+		movHash = &mh
+	}
+
+	return movHash
+}
 
 type File struct {
 	Path    string
@@ -33,4 +68,34 @@ func (f *File) RenamePath() string {
 	}
 
 	return path.Join(strings.Join(pts[:len(pts)-1], "/"), f.NewName)
+}
+
+func (f *File) IsMovie() bool {
+	mt, err := f.MovieType()
+	if err != nil {
+		return false
+	}
+
+	return mt != nil
+}
+
+func (f *File) MovieType() (*MovieExt, error) {
+	if f.IsDir() {
+		return nil, errors.New("NotMovie")
+	}
+
+	parts := strings.Split(*f.Name(), ".")
+	if len(parts) == 1 {
+		return nil, errors.New("NotMovie")
+	}
+
+	movExt := MovieExt(strings.ToLower(parts[len(parts)-1]))
+	exts := *MovieExtsHash()
+	_, has := exts[movExt]
+	if !has {
+		logger.Error("`MovieType` Unknown movie type:", movExt)
+		return nil, errors.New("UnknownMovieType")
+	}
+
+	return &movExt, nil
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"github.com/greenac/artemis/utils"
 	"path"
 )
 
@@ -32,7 +31,7 @@ func (mh *MovieHandler) SetMovies() error {
 		}
 
 		for _, f := range *fh.Files {
-			if utils.IsMovie(&f) {
+			if f.IsMovie() {
 				m := models.Movie{File: f}
 				m.Path = path.Join(p.Path, *m.Name())
 				mvs = append(mvs, m)
