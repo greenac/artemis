@@ -13,9 +13,7 @@ type Movie struct {
 }
 
 func (m *Movie) AddActor(a Actor) {
-	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current actors:", len(m.Actors))
 	m.Actors = append(m.Actors, &a)
-	logger.Debug("Adding actor:", a.FullName(), "to movie:", m.NewName, "current after actors:", len(m.Actors))
 }
 
 func (m *Movie) AddActorNames() {
@@ -88,27 +86,41 @@ func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
 }
 
 func (m *Movie) AddName(a *Actor) string {
-	newName := m.NewName
-	newName = utils.AddPrecedingUnderscore(*a.FirstName, newName)
-	newName = utils.AddFollowingUnderscore(*a.FirstName, newName)
-
-	if a.MiddleName != nil {
-		newName = utils.AddMiddleUnderscore(*a.FirstName, *a.MiddleName, newName)
-		newName = utils.AddFollowingUnderscore(*a.MiddleName, newName)
-		if a.LastName != nil {
-			newName = utils.AddMiddleUnderscore(*a.MiddleName, *a.LastName, newName)
-			newName = utils.AddFollowingUnderscore(*a.LastName, newName)
-		}
-	} else if a.LastName != nil {
-		newName = utils.AddMiddleUnderscore(*a.FirstName, *a.LastName, newName)
-		newName = utils.AddFollowingUnderscore(*a.LastName, newName)
+	if utils.IsNameFormatCorrect(m.NewName, a.FullName()) {
+		return m.NewName
 	}
 
+	newName := m.NewName
+	newName, err := utils.AddPrecedingUnderscore(*a.FirstName, newName)
+	if err == nil {
+		newName, err = utils.AddFollowingUnderscore(*a.FirstName, newName)
+	} else {
+		newName, err = utils.AddTailingNameToMovie(newName, *a.FirstName)
+	}
+
+	nextName := *a.FirstName
+
+	if a.MiddleName != nil {
+		newName, err = utils.AddNameToMovieAfterName(newName, *a.MiddleName, nextName)
+		nextName = *a.MiddleName
+	}
+
+	if a.LastName != nil {
+		newName, err = utils.AddNameToMovieAfterName(newName, *a.LastName, nextName)
+	}
+
+	logger.Log("new name is:", newName)
 	return newName
 }
 
 func (m *Movie) UpdateNewName(a *Actor) {
 	m.NewName = m.AddName(a)
+}
+
+func (m *Movie) AddActorsNames() {
+	for _, a := range m.Actors {
+		m.UpdateNewName(a)
+	}
 }
 
 func (m *Movie) GetNewName() string {

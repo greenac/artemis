@@ -70,10 +70,6 @@ func (ah *ArtemisHandler) Sort() {
 	}
 }
 
-func (ah *ArtemisHandler) Actors() *map[string]*models.Actor {
-	return &ah.ActorHandler.Actors
-}
-
 func (ah *ArtemisHandler) RenameMovies() {
 	ah.MovieHandler.AddKnownMovieNames()
 	ah.MovieHandler.AddUnknownMovieNames()

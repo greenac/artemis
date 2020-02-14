@@ -15,7 +15,7 @@ func AppendTxtToFile(filePath string, txt string) error {
 
 	defer f.Close()
 
-	if _, err := f.WriteString(fmt.Sprintf("%s\n", txt)); err != nil {
+	if _, err := f.WriteString(fmt.Sprintf("\n%s", txt)); err != nil {
 		logger.Error("AppendTxtToFile failed to write line:", txt, "to file:", filePath, err)
 	}
 
