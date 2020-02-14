@@ -51,7 +51,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 	}
 
 	for _, n := range *names {
-		a, err := ah.CreateActor(&n)
+		a, err := ah.CreateActor(string(n))
 		if err != nil {
 			logger.Warn("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
 			continue
@@ -83,7 +83,7 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 	}
 
 	for _, n := range fNames {
-		a, err := ah.CreateActor(&n)
+		a, err := ah.CreateActor(string(n))
 		if err != nil {
 			continue
 		}
@@ -113,8 +113,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 	}
 
 	for _, n := range names {
-		nb := []byte(n)
-		a, err := ah.CreateActor(&nb)
+		a, err := ah.CreateActor(n)
 		if err != nil {
 			continue
 		}
@@ -125,13 +124,13 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 	return nil
 }
 
-func (ah *ActorHandler) CreateActor(name *[]byte) (models.Actor, error) {
-	if name == nil || len(*name) == 0 {
+func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
+	if len(name) == 0 {
 		logger.Error("ActorHandler::createActor cannot create actor from name:", name)
 		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
-	n := strings.TrimSpace(string(*name))
+	n := strings.TrimSpace(name
 	parts := strings.Split(n, " ")
 	if len(parts) == 1 {
 		parts = strings.Split(n, "_")
@@ -232,8 +231,7 @@ func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 		return a, nil
 	}
 
-	bName := []byte(name)
-	act, err := ah.CreateActor(&bName)
+	act, err := ah.CreateActor(name)
 	if err != nil {
 		return nil, err
 	}
