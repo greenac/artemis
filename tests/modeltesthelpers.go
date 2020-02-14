@@ -55,8 +55,7 @@ func CreateMovieWithActors(fileName string, names *[]string) *models.Movie {
 
 	acts := make([]*models.Actor, len(*names))
 	for i, n := range *names {
-		bn := []byte(n)
-		a, err := ah.CreateActor(&bn)
+		a, err := ah.CreateActor(n)
 		if err != nil {
 			panic(err)
 		}
