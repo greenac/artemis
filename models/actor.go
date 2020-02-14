@@ -145,3 +145,19 @@ func (a *Actor) MatchWhole(frag string) bool {
 
 	return match
 }
+
+func (a *Actor) HasFirstMiddleLastName() bool {
+	return a.FirstName != nil && a.MiddleName != nil && a.LastName != nil
+}
+
+func (a *Actor) HasFirstLastName() bool {
+	return a.FirstName != nil && a.LastName != nil
+}
+
+func (a *Actor) HasFirstName() bool {
+	return a.FirstName != nil
+}
+
+func (a *Actor) FullNameNoUnderscores() string {
+	return strings.ReplaceAll(a.FullName(), "_", "")
+}

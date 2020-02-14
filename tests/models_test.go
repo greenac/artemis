@@ -68,3 +68,21 @@ func TestMovie_AddNameAtStartMiddleUnderscoreWithMiddleName(t *testing.T) {
 
 	assert.Equal(t, expected, n, "Movie names should match")
 }
+
+func TestMovie_AddNameNoUnderscoresMultipleActors(t *testing.T) {
+	expected := "a_river_runs_through_it_brad_pitt_robert_redford.mp4"
+	nms := []string{"brad_pitt", "robert_redford"}
+	m := CreateMovieWithActors("a_river_runs_through_it_brad_pittrobertredford.mp4", &nms)
+	m.AddActorNames()
+
+	assert.Equal(t, expected, m.NewName, "Movie names should match")
+}
+
+func TestMovie_AddNameNoUnderscoresMultipleActorsWithMiddleName(t *testing.T) {
+	expected := "a_river_runs_through_it_brad_tiberius_pitt_robert_redford.mp4"
+	nms := []string{"brad_tiberius_pitt", "robert_redford"}
+	m := CreateMovieWithActors("a_river_runs_through_it_brad_pittrobertredford.mp4", &nms)
+	m.AddActorNames()
+
+	assert.Equal(t, expected, m.NewName, "Movie names should match")
+}

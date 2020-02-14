@@ -51,7 +51,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 	}
 
 	for _, n := range *names {
-		a, err := ah.createActor(&n)
+		a, err := ah.CreateActor(&n)
 		if err != nil {
 			logger.Warn("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
 			continue
@@ -83,7 +83,7 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 	}
 
 	for _, n := range fNames {
-		a, err := ah.createActor(&n)
+		a, err := ah.CreateActor(&n)
 		if err != nil {
 			continue
 		}
@@ -114,7 +114,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 
 	for _, n := range names {
 		nb := []byte(n)
-		a, err := ah.createActor(&nb)
+		a, err := ah.CreateActor(&nb)
 		if err != nil {
 			continue
 		}
@@ -125,7 +125,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 	return nil
 }
 
-func (ah *ActorHandler) createActor(name *[]byte) (models.Actor, error) {
+func (ah *ActorHandler) CreateActor(name *[]byte) (models.Actor, error) {
 	if name == nil || len(*name) == 0 {
 		logger.Error("ActorHandler::createActor cannot create actor from name:", name)
 		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
@@ -233,7 +233,7 @@ func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 	}
 
 	bName := []byte(name)
-	act, err := ah.createActor(&bName)
+	act, err := ah.CreateActor(&bName)
 	if err != nil {
 		return nil, err
 	}
@@ -260,6 +260,7 @@ func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.Mo
 
 		if err == nil {
 			movie.AddActor(*a)
+			movie.UpdateNewName(a)
 		}
 	}
 }

@@ -92,7 +92,7 @@ func (f *File) MovieType() (*MovieExt, error) {
 	exts := *MovieExtsHash()
 	_, has := exts[movExt]
 	if !has {
-		logger.Error("`MovieType` Unknown movie type:", movExt)
+		logger.Warn("`MovieType` Unknown movie type:", movExt)
 		return nil, errors.New("UnknownMovieType")
 	}
 

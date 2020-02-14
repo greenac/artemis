@@ -74,17 +74,18 @@ func (uih *Handler) Run() error {
 
 mainloop:
 	for {
-		switch ev := termbox.PollEvent(); ev.Type {
+		ev := termbox.PollEvent()
+		switch ev.Type {
 		case termbox.EventKey:
 			switch ev.Key {
 			case termbox.KeyEsc:
-				if uih.Escape == nil {
-					logger.Debug("breaking main loop")
-					break mainloop
+				if uih.Escape != nil {
+					uih.Escape()
 				}
 
-				uih.Escape()
+				break mainloop
 			case termbox.KeyCtrlC:
+				uih.run = false
 				break mainloop
 			case termbox.KeyArrowRight, termbox.KeyCtrlF:
 				uih.arrowRight()
@@ -378,11 +379,11 @@ func (uih *Handler) SiftLines() {
 }
 
 func (uih *Handler) Flush() {
-	err := termbox.Flush()
-	if err != nil {
-		logger.Error("Handler::Flush failed to flush with errror:', err")
-		panic(err)
+	if !uih.run {
+		return
 	}
+
+	termbox.Flush()
 }
 
 func (uih *Handler) Clear(c Container) {
