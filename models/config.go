@@ -6,4 +6,5 @@ type ArtemisConfig struct {
 	ActorNamesFile  string   `json:"actorNamesFile"`
 	CachedNamesFile string   `json:"cachedNamesFile"`
 	StagingDir      string   `json:"stagingDir"`
+	ToDir           string   `json:"toDir"`
 }

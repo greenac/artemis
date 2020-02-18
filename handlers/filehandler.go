@@ -9,7 +9,7 @@ import (
 )
 
 type FileHandler struct {
-	Files    *[]models.File
+	Files    []models.File
 	BasePath models.FilePath
 }
 
@@ -26,17 +26,17 @@ func (fh *FileHandler) SetFiles() error {
 
 	files := make([]models.File, len(fi))
 	for i, f := range fi {
-		files[i] = models.File{Info: f}
+		files[i] = models.File{Info: f, BasePath: fh.BasePath.PathAsString()}
 	}
 
-	fh.Files = &files
+	fh.Files = files
 	return nil
 }
 
 func (fh *FileHandler) FileNames() *[][]byte {
-	names := make([][]byte, len(*fh.Files))
-	for i, f := range *fh.Files {
-		names[i] = []byte(*f.Name())
+	names := make([][]byte, len(fh.Files))
+	for i, f := range fh.Files {
+		names[i] = []byte(f.Name())
 	}
 
 	return &names
@@ -44,7 +44,7 @@ func (fh *FileHandler) FileNames() *[][]byte {
 
 func (fh *FileHandler) DirFiles() *[]models.File {
 	dFiles := make([]models.File, 0)
-	for _, f := range *fh.Files {
+	for _, f := range fh.Files {
 		if f.IsDir() {
 			dFiles = append(dFiles, f)
 		}
@@ -57,7 +57,7 @@ func (fh *FileHandler) DirFileNames() *[][]byte {
 	dFiles := fh.DirFiles()
 	names := make([][]byte, len(*dFiles))
 	for i, f := range *dFiles {
-		names[i] = []byte(*f.Name())
+		names[i] = []byte(f.Name())
 	}
 
 	return &names
@@ -108,42 +108,31 @@ func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 }
 
 func (fh *FileHandler) Rename(oldName string, newName string) error {
-	_, err := os.Stat(oldName)
+	exists, err := fh.DoesFileExistAtPath(newName)
 	if err != nil {
-		if os.IsNotExist(err) {
-			logger.Debug("`FileHandler::Rename` Renaming:", oldName, "to:", newName, "with error:", err)
-			return os.Rename(oldName, newName)
-		}
-
 		return err
+	}
+
+	if exists {
+		logger.Warn("FileHandler::Rename could not rename:", oldName, "to:", newName, "file exists already")
+		return nil
 	}
 
 	return nil
 }
 
-type FileMover struct {
-	FromPath models.FilePath
-	ToPath   models.FilePath
-}
-
-func (fm *FileMover) checkPaths() bool {
-	return fm.FromPath.PathDefined() && fm.ToPath.PathDefined()
-}
-
-func (fm *FileMover) Move() error {
-	if !fm.checkPaths() {
-		// TODO: throw correct error here
-		panic("File mover paths not instantiated")
-	}
-
-	err := os.Rename(fm.FromPath.PathAsString(), fm.ToPath.PathAsString())
+func (fh *FileHandler) DoesFileExistAtPath(path string) (bool, error) {
+	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			logger.Error("Failed to move file. File at path:", fm.FromPath, "does not exist")
+		if os.IsExist(err) {
+			return true, nil
+		} else if os.IsNotExist(err) {
+			return false, nil
 		}
 
-		return err
+		logger.Debug("`FileHandler::DoesFileExistAtPath` Error checking if file exists at path:", path)
+		return false, err
 	}
 
-	return nil
+	return false, nil
 }

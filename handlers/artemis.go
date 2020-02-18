@@ -86,7 +86,7 @@ func (ah *ArtemisHandler) MoveMovies() {
 	}
 
 	for _, m := range ah.MovieHandler.UnknownMovies {
-		if m.NewName != "" && *m.Name() != m.NewName && len(m.Actors) > 0 {
+		if m.NewName != "" && m.Name() != m.NewName && len(m.Actors) > 0 {
 			mvs = append(mvs, m)
 		}
 	}

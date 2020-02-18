@@ -41,32 +41,22 @@ func MovieExtsHash() *map[MovieExt]int {
 }
 
 type File struct {
-	Path    string
+	BasePath string
 	Info    os.FileInfo
 	NewName string
 	NewPath string
 }
 
-func (f *File) Name() *string {
-	n := f.Info.Name()
-	return &n
+func (f *File) Name() string {
+	return  f.Info.Name()
+}
+
+func (f *File) Path() string {
+	return path.Join(f.BasePath, f.Name())
 }
 
 func (f *File) IsDir() bool {
 	return f.Info.IsDir()
-}
-
-func (f *File) GetNewTotalPath() string {
-	return path.Join(f.NewPath, f.NewName)
-}
-
-func (f *File) RenamePath() string {
-	pts := strings.Split(f.Path, "/")
-	if len(pts) == 1 {
-		return path.Join(f.Path, f.NewName)
-	}
-
-	return path.Join(strings.Join(pts[:len(pts)-1], "/"), f.NewName)
 }
 
 func (f *File) IsMovie() bool {
@@ -78,12 +68,32 @@ func (f *File) IsMovie() bool {
 	return mt != nil
 }
 
+func (f *File) GetNewTotalPath() string {
+	var nn string
+	if f.NewName == "" {
+		nn = f.Info.Name()
+	} else {
+		nn = f.NewName
+	}
+
+	return path.Join(f.NewPath, nn)
+}
+
+func (f *File) RenamePath() string {
+	pts := strings.Split(f.Path, "/")
+	if len(pts) == 1 {
+		return path.Join(f.Path, f.NewName)
+	}
+
+	return path.Join(strings.Join(pts[:len(pts)-1], "/"), f.NewName)
+}
+
 func (f *File) MovieType() (*MovieExt, error) {
 	if f.IsDir() {
 		return nil, errors.New("NotMovie")
 	}
 
-	parts := strings.Split(*f.Name(), ".")
+	parts := strings.Split(f.Name(), ".")
 	if len(parts) == 1 {
 		return nil, errors.New("NotMovie")
 	}
