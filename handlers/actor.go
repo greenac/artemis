@@ -130,7 +130,7 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
-	n := strings.TrimSpace(name
+	n := strings.TrimSpace(name)
 	parts := strings.Split(n, " ")
 	if len(parts) == 1 {
 		parts = strings.Split(n, "_")

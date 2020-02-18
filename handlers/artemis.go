@@ -86,7 +86,7 @@ func (ah *ArtemisHandler) MoveMovies() {
 	}
 
 	for _, m := range ah.MovieHandler.UnknownMovies {
-		if m.NewName != "" && *m.Name() != m.NewName && len(m.Actors) > 0 {
+		if m.NewName != "" && m.Name() != m.NewName && len(m.Actors) > 0 {
 			mvs = append(mvs, m)
 		}
 	}
@@ -101,10 +101,10 @@ func (ah *ArtemisHandler) MoveMovies() {
 			continue
 		}
 
-		m.NewPath = path.Join(ap, m.GetNewName())
-		err = utils.RenameFile(m.Path, m.NewPath)
+		m.GetNewName()
+		err = utils.RenameFile(m.Path(), m.NewPath())
 		if err != nil {
-			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path, "to:", m.NewPath, err)
+			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path(), "to:", m.NewPath(), err)
 			panic(err)
 		}
 	}
