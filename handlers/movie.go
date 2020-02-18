@@ -39,6 +39,7 @@ func (mh *MovieHandler) SetMovies() error {
 	}
 
 	mh.Movies = mvs
+
 	return nil
 }
 

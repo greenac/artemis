@@ -3,14 +3,10 @@ package handlers
 import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"path"
 )
 
-type DirectoryMover struct {
-	ToDirPath models.FilePath
-}
 
-func (dm *DirectoryMover) MoveDir(dir models.File) error {
+func MoveDir(dir models.File) error {
 	if !dir.IsDir() {
 		return nil
 	}
@@ -23,7 +19,7 @@ func (dm *DirectoryMover) MoveDir(dir models.File) error {
 		return err
 	}
 
-	ex, err := fh.DoesFileExistAtPath(dir.NewPath)
+	ex, err := fh.DoesFileExistAtPath(dir.NewPath())
 	if err != nil {
 		logger.Warn("DirectoryMover::MoveDir failed to move directory to:", dir.GetNewTotalPath(), err)
 		return err
@@ -31,14 +27,16 @@ func (dm *DirectoryMover) MoveDir(dir models.File) error {
 
 	if ex {
 		for _, f := range fh.Files {
-			f.NewPath = dir.NewPath
+			f.NewBasePath = dir.NewPath()
 			if f.IsMovie() {
-				fh.Rename(f.Path, )
-				err := fm.Move()
+				err := fh.Rename(f.Path(), f.GetNewTotalPath())
+				if err != nil {
+					continue
+				}
 			}
 		}
 	} else {
-
+		fh.Rename(dir.Path(), dir.GetNewTotalPath())
 	}
 }
 

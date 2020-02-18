@@ -44,7 +44,7 @@ type File struct {
 	BasePath string
 	Info    os.FileInfo
 	NewName string
-	NewPath string
+	NewBasePath string
 }
 
 func (f *File) Name() string {
@@ -53,6 +53,10 @@ func (f *File) Name() string {
 
 func (f *File) Path() string {
 	return path.Join(f.BasePath, f.Name())
+}
+
+func (f *File) NewPath() string {
+	return path.Join(f.NewBasePath, f.NewName)
 }
 
 func (f *File) IsDir() bool {
@@ -76,13 +80,13 @@ func (f *File) GetNewTotalPath() string {
 		nn = f.NewName
 	}
 
-	return path.Join(f.NewPath, nn)
+	return path.Join(f.NewBasePath, nn)
 }
 
 func (f *File) RenamePath() string {
-	pts := strings.Split(f.Path, "/")
+	pts := strings.Split(f.BasePath, "/")
 	if len(pts) == 1 {
-		return path.Join(f.Path, f.NewName)
+		return path.Join(f.BasePath, f.NewName)
 	}
 
 	return path.Join(strings.Join(pts[:len(pts)-1], "/"), f.NewName)

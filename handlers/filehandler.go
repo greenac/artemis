@@ -30,6 +30,7 @@ func (fh *FileHandler) SetFiles() error {
 	}
 
 	fh.Files = files
+
 	return nil
 }
 
@@ -110,6 +111,7 @@ func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 func (fh *FileHandler) Rename(oldName string, newName string) error {
 	exists, err := fh.DoesFileExistAtPath(newName)
 	if err != nil {
+		logger.Error("FileHandler::Rename could not rename file at:", oldName, "to:", newName)
 		return err
 	}
 
