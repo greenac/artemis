@@ -69,7 +69,7 @@ func (a *Actor) FullName() string {
 }
 
 func (a *Actor) IsIn(m *Movie) bool {
-	n := strings.ToLower(*m.Name())
+	n := strings.ToLower(m.Name())
 	isIn := false
 	if a.FirstName != nil {
 		isIn = strings.Contains(n, *a.FirstName)

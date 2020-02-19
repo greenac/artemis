@@ -10,7 +10,7 @@ type MovieFileHandler struct {
 
 func (mfh *MovieFileHandler) MovieFiles() *[]models.File {
 	movieFiles := make([]models.File, 0)
-	for _, f := range *mfh.Files {
+	for _, f := range mfh.Files {
 		if f.IsMovie() {
 			movieFiles = append(movieFiles, f)
 		}
@@ -23,7 +23,7 @@ func (mfh *MovieFileHandler) MovieFileNames() *[][]byte {
 	mFiles := mfh.MovieFiles()
 	names := make([][]byte, len(*mFiles))
 	for i, f := range *mFiles {
-		names[i] = []byte(*f.Name())
+		names[i] = []byte(f.Name())
 	}
 
 	return &names

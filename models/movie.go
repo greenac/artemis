@@ -137,8 +137,8 @@ func (m *Movie) GetNewName() string {
 }
 
 func (m *Movie) removeRepeats() string {
-	nn := make([]byte, len(*m.Name()))
-	copy(nn, *m.Name())
+	nn := make([]byte, len(m.Name()))
+	copy(nn, m.Name())
 	name := strings.ToLower(string(nn))
 	if strings.Contains(name, "scene_") {
 		re, err := regexp.Compile(`\\(.+?\\)`)
