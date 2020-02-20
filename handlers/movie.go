@@ -56,7 +56,7 @@ func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
 	}
 
 	fh := FileHandler{}
-	err := fh.Rename(m.BasePath, m.RenamePath())
+	err := fh.Rename(m.BasePath, m.RenamePath(), false)
 	if err != nil {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Path, "failed to be renamed with error:", err)
 		return err
