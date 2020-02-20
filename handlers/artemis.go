@@ -50,17 +50,15 @@ func (ah *ArtemisHandler) Setup(
 func (ah *ArtemisHandler) Sort() {
 	for _, m := range ah.MovieHandler.Movies {
 		m.GetNewName()
-		isKnown := false
 
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
 				m.AddActor(*a)
 				m.UpdateNewName(a)
-				isKnown = true
 			}
 		}
 
-		if isKnown {
+		if m.IsKnown() {
 			ah.MovieHandler.AddKnownMovie(m)
 		} else {
 			ah.MovieHandler.AddUnknownMovie(m)
