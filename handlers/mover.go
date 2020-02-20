@@ -6,7 +6,6 @@ import (
 	"os"
 )
 
-
 type FileMover struct {
 	FromPath models.FilePath
 	ToPath   models.FilePath

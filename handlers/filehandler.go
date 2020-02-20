@@ -108,19 +108,19 @@ func (fh *FileHandler) ReadNameFile(p *models.FilePath) (*[][]byte, error) {
 	return &names, nil
 }
 
-func (fh *FileHandler) Rename(oldName string, newName string) error {
-	exists, err := fh.DoesFileExistAtPath(newName)
+func (fh *FileHandler) Rename(oldPath string, newPath string, replaceExisting bool) error {
+	exists, err := fh.DoesFileExistAtPath(newPath)
 	if err != nil {
-		logger.Error("FileHandler::Rename could not rename file at:", oldName, "to:", newName)
+		logger.Error("FileHandler::Rename could not rename file at:", oldPath, "to:", newPath)
 		return err
 	}
 
-	if exists {
-		logger.Warn("FileHandler::Rename could not rename:", oldName, "to:", newName, "file exists already")
+	if exists && !replaceExisting {
+		logger.Warn("FileHandler::Rename could not rename:", oldPath, "to:", newPath, "file exists already")
 		return nil
 	}
 
-	return nil
+	return os.Rename(oldPath, newPath)
 }
 
 func (fh *FileHandler) DoesFileExistAtPath(path string) (bool, error) {
