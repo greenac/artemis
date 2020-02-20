@@ -54,7 +54,7 @@ func (anh *AddNamesHandler) ShowUnknown() {
 	}
 
 	m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
-	txts := []string{"Add name(s) to:", *m.Name()}
+	txts := []string{"Add name(s) to:", m.Name()}
 	anh.uiHandler.SetHeader(txts, true)
 	anh.inputStart = anh.uiHandler.NumOfLines(Body) - 1
 }
@@ -100,7 +100,7 @@ func (anh *AddNamesHandler) readInput() {
 		anh.uiHandler.Clear(Footer)
 		anh.uiHandler.ClearUI()
 		m := anh.artemisHandler.MovieHandler.CurrentUnknownMovie()
-		ftTxt := fmt.Sprint("Add name(s) ", string(txt), " to: ", *m.Name(), " (Y/N)?")
+		ftTxt := fmt.Sprint("Add name(s) ", string(txt), " to: ", m.Name(), " (Y/N)?")
 		anh.uiHandler.AddToBody(ftTxt)
 		anh.uiHandler.CursorPosX = 0
 		anh.uiHandler.CursorPosY += 1
