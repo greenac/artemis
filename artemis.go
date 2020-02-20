@@ -4,53 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/greenac/artemis/artemiserror"
-	"github.com/greenac/artemis/handlers"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"github.com/greenac/artemis/ui"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"os"
 )
-
-
-type ArtemisRunType string
-
-const (
-	Rename ArtemisRunType = "RENAME"
-	OrganizeSingleDir  ArtemisRunType = "ORGANIZE_SINGLE_DIR"
-)
-
-
-func RenameMovies(ac *models.ArtemisConfig) {
-	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
-	cachedPath := models.FilePath{Path: ac.CachedNamesFile}
-	stagingPath := models.FilePath{Path: ac.StagingDir}
-
-	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
-	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
-
-	for i, p := range ac.TargetDirs {
-		targetPaths[i] = models.FilePath{Path: p}
-	}
-
-	for i, p := range ac.ActorDirs {
-		actorPaths[i] = models.FilePath{Path: p}
-	}
-
-	anh := ui.AddNamesHandler{}
-	anh.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
-	anh.Run()
-}
-
-func OrganizeSingleDirectory(ac *models.ArtemisConfig) {
-	err := handlers.OrganizeRepeatNamesInDir("/Users/andre/Downloads/p/organized/abella_danger_copy")
-	if err != nil {
-		logger.Error("Failed to run organize single directory with error:", err)
-		panic(err)
-	}
-}
-
 
 func main() {
 	err := godotenv.Load()
@@ -91,10 +50,12 @@ func main() {
 	switch rt {
 	case Rename:
 		RenameMovies(&ac)
-	case OrganizeSingleDir:
-		OrganizeSingleDirectory(&ac)
+	case OrganizeStagingDir:
+		OrganizeStagingDirectory(&ac)
 	default:
 		logger.Error("Unknown run type:", rt)
 		panic(artemiserror.New(artemiserror.InvalidParameter))
 	}
+
+	logger.Log("Finished running:", rt)
 }

@@ -115,7 +115,7 @@ func (fh *FileHandler) Rename(oldPath string, newPath string, replaceExisting bo
 		return err
 	}
 
-	if exists && !replaceExisting{
+	if exists && !replaceExisting {
 		logger.Warn("FileHandler::Rename could not rename:", oldPath, "to:", newPath, "file exists already")
 		return nil
 	}

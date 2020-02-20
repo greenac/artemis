@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"regexp"
@@ -9,71 +10,46 @@ import (
 	"strings"
 )
 
-//func MoveDir(dir models.File) error {
-//	if !dir.IsDir() {
-//		return nil
-//	}
-//
-//	fh := FileHandler{BasePath: models.FilePath{Path: dir.Path()}}
-//
-//	err := fh.SetFiles()
-//	if err != nil {
-//		logger.Error("MoveDir failed to read files in dir:", dir.Path, err)
-//		return err
-//	}
-//
-//	exists, err := fh.DoesFileExistAtPath(dir.NewPath())
-//	if err != nil {
-//		logger.Warn("MoveDir failed to move directory to:", dir.GetNewTotalPath(), err)
-//		return err
-//	}
-//
-//	if exists {
-//		for _, f := range fh.Files {
-//
-//			f.NewBasePath = dir.NewPath()
-//			if f.IsMovie() {
-//				err := fh.Rename(f.Path(), f.GetNewTotalPath())
-//				if err != nil {
-//					continue
-//				}
-//			}
-//		}
-//	} else {
-//		err = fh.Rename(dir.Path(), dir.GetNewTotalPath())
-//		return err
-//	}
-//
-//	return nil
-//}
+func OrganizeAllRepeatNamesInDir(dirPath string) error {
+	fh := FileHandler{BasePath: models.FilePath{Path: dirPath}}
+	err := fh.SetFiles()
+	if err != nil {
+		return err
+	}
 
+	for _, f := range fh.Files {
+		err = OrganizeRepeatNamesInDir(&f)
+		if err != nil {
+			logger.Warn("OrganizeAllRepeatNamesInDir failed to organize dir:", f.Path(), "with error:", err)
+		}
+	}
 
+	return nil
+}
 
-//func AddMovieToDir(m *models.Movie, dir models.File) error {
-//	nu := NameUpdater{DirPath: dir.Path()}
-//	nu.SetUp()
-//
-//
-//}
+func OrganizeRepeatNamesInDir(f *models.File) error {
+	if !f.IsDir() {
+		return nil
+	}
 
-func OrganizeRepeatNamesInDir(dirPath string) error {
-	nu := NameUpdater{DirPath: dirPath, isSorted: false}
+	nu := NameUpdater{DirPath: f.Path(), NewDirPath: f.Path(), isSorted: false}
+
 	err := nu.FillMovies()
 	if err != nil {
 		return err
 	}
 
+	nu.RenameMovies()
 
 	return nil
 }
 
-
 type NameUpdater struct {
-	DirPath string
-	NewDirPath string
-	fh FileHandler
+	DirPath          string
+	NewDirPath       string
+	fh               FileHandler
 	moviesAndNumbers []models.MovieAndNumber
-	isSorted bool
+	isSorted         bool
 }
 
 func (nu *NameUpdater) FillMovies() error {
@@ -101,8 +77,6 @@ func (nu *NameUpdater) FillMovies() error {
 				continue
 			}
 
-			logger.Debug("Got movie number:", on, "for movie:", m.Name())
-
 			mn.Number = on
 
 			mvs = append(mvs, mn)
@@ -114,7 +88,7 @@ func (nu *NameUpdater) FillMovies() error {
 	nu.isSorted = true
 
 	for i, m := range nu.moviesAndNumbers {
-		m.NewName = nu.UpdateMovieNameWithNumber(&m, i + 1)
+		m.NewName = nu.UpdateMovieNameWithNumber(&m, i+1)
 	}
 
 	return nil
@@ -128,9 +102,14 @@ func (nu *NameUpdater) sortMovies() {
 
 func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 	parts := strings.Split(m.Name(), ".")
+	if len(parts) != 2 {
+		logger.Error("NameUpdater::GetMovieNumber movie is improper format:", m.Name())
+		return -1, artemiserror.New(artemiserror.InvalidName)
+	}
+
 	n := parts[0]
 
-	if strings.Contains(n, "scene_", ) {
+	if strings.Contains(n, "scene_") {
 		re, err := regexp.Compile(`_[0-9]*_`)
 		if err != nil {
 			logger.Error("GetMovieNumber Could not compile regex", err)
@@ -138,7 +117,6 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 		}
 
 		matches := re.FindAllString(n, -1)
-		logger.Log("matches:", matches)
 		if len(matches) == 0 {
 			return -1, nil
 		}
@@ -160,7 +138,6 @@ func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNu
 	name := m.Name()
 	on := strconv.Itoa(m.Number)
 	i := strings.LastIndex(name, on)
-	logger.Log("index for name:", name, "is:", i, "for number:", m.Number)
 	if i == -1 {
 		return name
 	}
@@ -178,12 +155,15 @@ func (nu *NameUpdater) RenameMovies() {
 			continue
 		}
 
-		nu.fh.Rename(op, np, true)
+		err := nu.fh.Rename(op, np, true)
+		if err != nil {
+			logger.Warn("NameUpdater::RenameMovies could not rename movie at:", op, "to:", np, err)
+		}
 	}
 }
 
 func (nu *NameUpdater) AddMovie(m *models.Movie) error {
-	mn := models.MovieAndNumber{Movie:  m, Number: 0,}
+	mn := models.MovieAndNumber{Movie: m, Number: 0}
 
 	on, err := nu.GetMovieNumber(&mn)
 	if err != nil {
@@ -202,7 +182,6 @@ func (nu *NameUpdater) AddMovie(m *models.Movie) error {
 
 		mn.Movie.NewName = nu.UpdateMovieNameWithNumber(&mn, nn)
 	}
-
 
 	nu.moviesAndNumbers = append(nu.moviesAndNumbers, mn)
 

@@ -26,8 +26,8 @@ func createActorAndMovie(fileName string, middleName string) (actor *models.Acto
 	m := models.Movie{
 		File: models.File{
 			BasePath:    "/path/to/movie",
-			Info:    fi,
-			NewName: "",
+			Info:        fi,
+			NewName:     "",
 			NewBasePath: "",
 		},
 		Actors: []*models.Actor{&a},
@@ -68,8 +68,8 @@ func CreateMovieWithActors(fileName string, names *[]string) *models.Movie {
 	m := models.Movie{
 		File: models.File{
 			BasePath:    "/path/to/movie",
-			Info:    fi,
-			NewName: "",
+			Info:        fi,
+			NewName:     "",
 			NewBasePath: "",
 		},
 		Actors: acts,

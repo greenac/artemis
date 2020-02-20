@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"github.com/greenac/artemis/logger"
 	"os"
 	"path"
 	"strings"
@@ -41,14 +40,14 @@ func MovieExtsHash() *map[MovieExt]int {
 }
 
 type File struct {
-	BasePath string
-	Info    os.FileInfo
-	NewName string
+	BasePath    string
+	Info        os.FileInfo
+	NewName     string
 	NewBasePath string
 }
 
 func (f *File) Name() string {
-	return  f.Info.Name()
+	return f.Info.Name()
 }
 
 func (f *File) Path() string {
@@ -106,7 +105,6 @@ func (f *File) MovieType() (*MovieExt, error) {
 	exts := *MovieExtsHash()
 	_, has := exts[movExt]
 	if !has {
-		logger.Warn("`MovieType` Unknown movie type:", movExt)
 		return nil, errors.New("UnknownMovieType")
 	}
 
