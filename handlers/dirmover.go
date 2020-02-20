@@ -101,6 +101,8 @@ func (nu *NameUpdater) FillMovies() error {
 				continue
 			}
 
+			logger.Debug("Got movie number:", on, "for movie:", m.Name())
+
 			mn.Number = on
 
 			mvs = append(mvs, mn)
@@ -129,13 +131,14 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 	n := parts[0]
 
 	if strings.Contains(n, "scene_", ) {
-		re, err := regexp.Compile(`_.[0-9]+_`)
+		re, err := regexp.Compile(`_[0-9]*_`)
 		if err != nil {
 			logger.Error("GetMovieNumber Could not compile regex", err)
 			return -1, err
 		}
 
 		matches := re.FindAllString(n, -1)
+		logger.Log("matches:", matches)
 		if len(matches) == 0 {
 			return -1, nil
 		}
