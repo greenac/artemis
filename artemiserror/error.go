@@ -6,6 +6,7 @@ const (
 	ArgsNotInitialized ExceptionType = "Arguments not initialized"
 	PathNotSet         ExceptionType = "Path not set"
 	InvalidName        ExceptionType = "Invalid name"
+	InvalidParameter   ExceptionType = "Invalid parameter"
 )
 
 type ArtemisError struct {
