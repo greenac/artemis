@@ -3,8 +3,6 @@ package handlers
 import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"github.com/greenac/artemis/utils"
-	"path"
 )
 
 type ArtemisHandler struct {
@@ -77,35 +75,5 @@ func (ah *ArtemisHandler) RenameMovies() {
 }
 
 func (ah *ArtemisHandler) MoveMovies() {
-	mvs := make([]*models.Movie, 0)
-
-	for _, m := range ah.MovieHandler.KnownMovies {
-		if len(m.Actors) > 0 {
-			mvs = append(mvs, m)
-		}
-	}
-
-	for _, m := range ah.MovieHandler.UnknownMovies {
-		if m.NewName != "" && m.Name() != m.NewName && len(m.Actors) > 0 {
-			mvs = append(mvs, m)
-		}
-	}
-
-	for _, m := range mvs {
-		a := m.Actors[0]
-		ap := path.Join(ah.ToPath.PathAsString(), a.FullName())
-
-		err := utils.CreateDir(ap)
-		if err != nil {
-			logger.Warn("`ArtemisHandler::MoveMovies` create directory:", ap)
-			continue
-		}
-
-		m.GetNewName()
-		err = utils.RenameFile(m.Path(), m.NewPath())
-		if err != nil {
-			logger.Error("`ArtemisHandler::MoveMovies` could not rename:", m.Path(), "to:", m.NewPath(), err)
-			panic(err)
-		}
-	}
+	ah.MovieHandler.MoveMovies(ah.ToPath.PathAsString())
 }
