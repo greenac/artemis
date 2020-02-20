@@ -47,6 +47,8 @@ import (
 //	return nil
 //}
 
+
+
 //func AddMovieToDir(m *models.Movie, dir models.File) error {
 //	nu := NameUpdater{DirPath: dir.Path()}
 //	nu.SetUp()
@@ -54,22 +56,31 @@ import (
 //
 //}
 
+func OrganizeRepeatNamesInDir(dirPath string) error {
+	nu := NameUpdater{DirPath: dirPath, isSorted: false}
+	err := nu.FillMovies()
+	if err != nil {
+		return err
+	}
+
+
+	return nil
+}
+
 
 type NameUpdater struct {
 	DirPath string
+	NewDirPath string
 	fh FileHandler
 	moviesAndNumbers []models.MovieAndNumber
 	isSorted bool
 }
 
-func (nu *NameUpdater) SetUp() {
+func (nu *NameUpdater) FillMovies() error {
 	nu.fh = FileHandler{BasePath: models.FilePath{Path: nu.DirPath}}
-}
-
-func (nu *NameUpdater) FillMovies(dirPath string) error {
 	err := nu.fh.SetFiles()
 	if err != nil {
-		logger.Error("UpdateRepeatNames failed to read files in dir:", dirPath, err)
+		logger.Error("UpdateRepeatNames failed to read files in dir:", nu.DirPath, err)
 		return err
 	}
 
@@ -77,6 +88,8 @@ func (nu *NameUpdater) FillMovies(dirPath string) error {
 
 	for _, f := range nu.fh.Files {
 		if f.IsMovie() && strings.Contains(f.Name(), "scene_") {
+			f.NewBasePath = nu.NewDirPath
+
 			m := models.Movie{
 				File:   f,
 				Actors: nil,
@@ -95,18 +108,17 @@ func (nu *NameUpdater) FillMovies(dirPath string) error {
 	}
 
 	nu.moviesAndNumbers = mvs
-	nu.SortMovies()
+	nu.sortMovies()
 	nu.isSorted = true
 
 	for i, m := range nu.moviesAndNumbers {
 		m.NewName = nu.UpdateMovieNameWithNumber(&m, i + 1)
 	}
 
-
 	return nil
 }
 
-func (nu *NameUpdater) SortMovies() {
+func (nu *NameUpdater) sortMovies() {
 	sort.SliceStable(nu.moviesAndNumbers, func(i, j int) bool {
 		return nu.moviesAndNumbers[i].Number < nu.moviesAndNumbers[j].Number
 	})
@@ -179,7 +191,7 @@ func (nu *NameUpdater) AddMovie(m *models.Movie) error {
 		nn := 1
 		if len(nu.moviesAndNumbers) > 0 {
 			if !nu.isSorted {
-				nu.SortMovies()
+				nu.sortMovies()
 			}
 
 			nn = nu.moviesAndNumbers[len(nu.moviesAndNumbers)-1].Number + 1
