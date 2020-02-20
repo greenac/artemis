@@ -151,3 +151,7 @@ func (m *Movie) removeRepeats() string {
 
 	return strings.ReplaceAll(name, " copy", "")
 }
+
+func (m *Movie) IsKnown() bool {
+	return len(m.Actors) > 0
+}
