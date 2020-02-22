@@ -183,17 +183,23 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 	return -1, nil
 }
 
-func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNum int) string {
-	name := m.NewNameOrName()
+func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNum int) (string, error) {
+	parts := strings.Split(m.NewNameOrName(), ".")
+	if len(parts) != 2 {
+		logger.Error("NameUpdater::UpdateMovieNameWithNumber movie is improper format:", m.NewNameOrName())
+		return "", artemiserror.New(artemiserror.InvalidName)
+	}
+
+	name := parts[0]
 	on := strconv.Itoa(m.Number)
 	i := strings.LastIndex(name, on)
 	if i == -1 {
-		return name
+		return m.NewName, nil
 	}
 
 	rn := []rune(name)
 
-	return string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...))
+	return string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1], nil
 }
 
 func (nu *NameUpdater) RenameMovies() {
