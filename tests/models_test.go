@@ -13,6 +13,14 @@ func TestMovie_AddNameNoUnderscores(t *testing.T) {
 	assert.Equal(t, expected, n, "Movie names should match")
 }
 
+func TestMovie_AddNameUnknownWithBrackets(t *testing.T) {
+	expected := "scene_480p_1_brad_pitt.mp4"
+
+	n := AddName("scene_480p (1).mp4", "")
+
+	assert.Equal(t, expected, n, "Movie names should match")
+}
+
 func TestMovie_AddNameNoPrecedingUnderscore(t *testing.T) {
 	expected := "a_river_runs_through_it_brad_pitt.mp4"
 

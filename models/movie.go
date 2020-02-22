@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var repeatMovieFrags = []string{"scene_"}
+
 type Movie struct {
 	File
 	Actors []*Actor
@@ -137,10 +139,8 @@ func (m *Movie) GetNewName() string {
 }
 
 func (m *Movie) removeRepeats() string {
-	nn := make([]byte, len(m.Name()))
-	copy(nn, m.Name())
-	name := strings.ToLower(string(nn))
-	if strings.Contains(name, "scene_") {
+	name := m.Name()
+	if m.IsRepeat() {
 		re, err := regexp.Compile(`\\(.+?\\)`)
 		if err != nil {
 			logger.Warn("Movie::RemoveRepeats failed to compile regex with error:", err)
@@ -154,4 +154,16 @@ func (m *Movie) removeRepeats() string {
 
 func (m *Movie) IsKnown() bool {
 	return len(m.Actors) > 0
+}
+
+func (m *Movie) IsRepeat() bool {
+	rep := false
+	for _, f := range repeatMovieFrags {
+		if strings.Contains(m.Name(), f) || strings.Contains(m.NewName, f) {
+			rep = true
+			break
+		}
+	}
+
+	return rep
 }

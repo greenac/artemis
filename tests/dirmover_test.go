@@ -12,7 +12,7 @@ func TestDirMover_MovieNumber(t *testing.T) {
 
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie(mn, 0)
+	m := CreateMovieAndNumber(mn, 0)
 	n, err := np.GetMovieNumber(m)
 	if err != nil {
 		logger.Error("TestDirMover_MovieNumber got err:", err)
@@ -27,7 +27,7 @@ func TestDirMover_MovieNumberSingleDigit(t *testing.T) {
 
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie(mn, 0)
+	m := CreateMovieAndNumber(mn, 0)
 	n, err := np.GetMovieNumber(m)
 	if err != nil {
 		logger.Error("TestDirMover_MovieNumber got err:", err)
@@ -42,7 +42,7 @@ func TestDirMover_MovieWithoutNumber(t *testing.T) {
 
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie(mn, -1)
+	m := CreateMovieAndNumber(mn, -1)
 	n, err := np.GetMovieNumber(m)
 	if err != nil {
 		logger.Error("TestDirMover_MovieNumber got err:", err)
@@ -55,7 +55,7 @@ func TestDirMover_MovieWithoutNumber(t *testing.T) {
 func TestDirMover_UpdateMovieNumber(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie("scene_480p_34_brad_pitt.mp4", 34)
+	m := CreateMovieAndNumber("scene_480p_34_brad_pitt.mp4", 34)
 	nn := np.UpdateMovieNameWithNumber(m, 99)
 
 	assert.Equal(t, "scene_480p_99_brad_pitt.mp4", nn, "Movie number should update correctly")
@@ -64,7 +64,7 @@ func TestDirMover_UpdateMovieNumber(t *testing.T) {
 func TestDirMover_UpdateMovieNumberSingleDigit(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie("scene_480p_1_brad_pitt.mp4", 1)
+	m := CreateMovieAndNumber("scene_480p_1_brad_pitt.mp4", 1)
 	nn := np.UpdateMovieNameWithNumber(m, 99)
 
 	assert.Equal(t, "scene_480p_99_brad_pitt.mp4", nn, "Movie number should update correctly")
@@ -73,7 +73,7 @@ func TestDirMover_UpdateMovieNumberSingleDigit(t *testing.T) {
 func TestDirMover_UpdateMovieNumberNoNumber(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
-	m := CreateMovie("scene_480p_brad_pitt.mp4", -1)
+	m := CreateMovieAndNumber("scene_480p_brad_pitt.mp4", -1)
 	nn := np.UpdateMovieNameWithNumber(m, 1)
 
 	assert.Equal(t, "scene_480p_brad_pitt.mp4", nn, "Movie number should update correctly")

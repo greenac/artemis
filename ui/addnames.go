@@ -22,14 +22,27 @@ func (anh *AddNamesHandler) Setup(
 	actFilePath *models.FilePath,
 	cachedNamePath *models.FilePath,
 	toPath *models.FilePath,
-) {
-	anh.artemisHandler.Setup(movDirPaths, actDirPaths, actFilePath, cachedNamePath, toPath)
+) error {
+	err := anh.artemisHandler.Setup(
+		movDirPaths,
+		actDirPaths,
+		actFilePath,
+		cachedNamePath,
+		toPath,
+	)
+
+	if err != nil {
+		return err
+	}
+
 	anh.uiHandler.Setup()
 	anh.uiHandler.Kickoff = anh.ShowUnknown
 	anh.uiHandler.KeyPress = anh.onKeyPress
 	anh.uiHandler.AfterReturn = anh.readInput
 	anh.uiHandler.Tab = anh.handleTab
 	anh.uiHandler.Escape = anh.AddNamesToMovies
+
+	return nil
 }
 
 func (anh *AddNamesHandler) Run() {
