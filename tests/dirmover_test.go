@@ -56,7 +56,7 @@ func TestDirMover_UpdateMovieNumber(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
 	m := CreateMovieAndNumber("scene_480p_34_brad_pitt.mp4", 34)
-	nn := np.UpdateMovieNameWithNumber(m, 99)
+	nn, _ := np.UpdateMovieNameWithNumber(m, 99)
 
 	assert.Equal(t, "scene_480p_99_brad_pitt.mp4", nn, "Movie number should update correctly")
 }
@@ -65,7 +65,7 @@ func TestDirMover_UpdateMovieNumberSingleDigit(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
 	m := CreateMovieAndNumber("scene_480p_1_brad_pitt.mp4", 1)
-	nn := np.UpdateMovieNameWithNumber(m, 99)
+	nn, _ := np.UpdateMovieNameWithNumber(m, 99)
 
 	assert.Equal(t, "scene_480p_99_brad_pitt.mp4", nn, "Movie number should update correctly")
 }
@@ -74,7 +74,7 @@ func TestDirMover_UpdateMovieNumberNoNumber(t *testing.T) {
 	np := handlers.NameUpdater{DirPath: "some/dir/path"}
 
 	m := CreateMovieAndNumber("scene_480p_brad_pitt.mp4", -1)
-	nn := np.UpdateMovieNameWithNumber(m, 1)
+	nn, _ := np.UpdateMovieNameWithNumber(m, 1)
 
 	assert.Equal(t, "scene_480p_brad_pitt.mp4", nn, "Movie number should update correctly")
 }
