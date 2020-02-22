@@ -5,7 +5,7 @@ import (
 	"github.com/greenac/artemis/models"
 )
 
-func CreateMovie(movieName string, num int) *models.MovieAndNumber {
+func CreateMovieAndNumber(movieName string, num int) *models.MovieAndNumber {
 	fi := mocks.MockFileInfo{MockName: movieName}
 
 	m := models.Movie{
@@ -16,6 +16,8 @@ func CreateMovie(movieName string, num int) *models.MovieAndNumber {
 			NewBasePath: "",
 		},
 	}
+
+	m.GetNewName()
 
 	return &models.MovieAndNumber{
 		Movie:  &m,

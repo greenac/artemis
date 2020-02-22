@@ -31,7 +31,11 @@ func RenameMovies(ac *models.ArtemisConfig) {
 	}
 
 	anh := ui.AddNamesHandler{}
-	anh.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
+	err := anh.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
+	if err != nil {
+		panic(err)
+	}
+
 	anh.Run()
 }
 

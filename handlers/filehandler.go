@@ -132,7 +132,6 @@ func (fh *FileHandler) DoesFileExistAtPath(path string) (bool, error) {
 			return false, nil
 		}
 
-		logger.Debug("`FileHandler::DoesFileExistAtPath` Error checking if file exists at path:", path)
 		return false, err
 	}
 

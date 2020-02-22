@@ -50,6 +50,14 @@ func (f *File) Name() string {
 	return f.Info.Name()
 }
 
+func (f *File) NewNameOrName() string {
+	if f.NewName == "" {
+		return f.Name()
+	}
+
+	return f.NewName
+}
+
 func (f *File) Path() string {
 	return path.Join(f.BasePath, f.Name())
 }

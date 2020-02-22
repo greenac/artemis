@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+type MoveMovieType int
+
+const (
+	Internal MoveMovieType = 0
+	External MoveMovieType = 1
+)
+
 func OrganizeAllRepeatNamesInDir(dirPath string) error {
 	fh := FileHandler{BasePath: models.FilePath{Path: dirPath}}
 	err := fh.SetFiles()
@@ -18,7 +25,11 @@ func OrganizeAllRepeatNamesInDir(dirPath string) error {
 	}
 
 	for _, f := range fh.Files {
-		err = OrganizeRepeatNamesInDir(&f)
+		if !f.IsDir() {
+			continue
+		}
+
+		err = OrganizeRepeatNamesInDir(f.Path())
 		if err != nil {
 			logger.Warn("OrganizeAllRepeatNamesInDir failed to organize dir:", f.Path(), "with error:", err)
 		}
@@ -27,14 +38,46 @@ func OrganizeAllRepeatNamesInDir(dirPath string) error {
 	return nil
 }
 
-func OrganizeRepeatNamesInDir(f *models.File) error {
-	if !f.IsDir() {
-		return nil
-	}
-
-	nu := NameUpdater{DirPath: f.Path(), NewDirPath: f.Path(), isSorted: false}
+func OrganizeRepeatNamesInDir(dirPath string) error {
+	nu := NameUpdater{DirPath: dirPath, isSorted: false}
 
 	err := nu.FillMovies()
+	if err != nil {
+		return err
+	}
+
+	for _, m := range nu.moviesAndNumbers {
+		m.Movie.BasePath = dirPath
+		m.Movie.NewBasePath = dirPath
+	}
+
+	nu.RenameMovies()
+
+	return nil
+}
+
+func MoveMovie(m *models.Movie, ty MoveMovieType) error {
+	// FIXME: Think of a way to make this more efficient. This should not have to
+	// pull all the files in dirPath every time a movie is moved
+
+	var p string
+	switch ty {
+	case Internal:
+		p = m.BasePath
+	case External:
+		p = m.NewBasePath
+	}
+
+	nu := NameUpdater{DirPath: p, isSorted: false}
+
+	err := nu.FillMovies()
+	if err != nil {
+		return err
+	}
+
+	//nu.RenameMovies()
+
+	err = nu.AddMovie(m)
 	if err != nil {
 		return err
 	}
@@ -46,7 +89,6 @@ func OrganizeRepeatNamesInDir(f *models.File) error {
 
 type NameUpdater struct {
 	DirPath          string
-	NewDirPath       string
 	fh               FileHandler
 	moviesAndNumbers []models.MovieAndNumber
 	isSorted         bool
@@ -63,13 +105,19 @@ func (nu *NameUpdater) FillMovies() error {
 	mvs := make([]models.MovieAndNumber, 0)
 
 	for _, f := range nu.fh.Files {
-		if f.IsMovie() && strings.Contains(f.Name(), "scene_") {
-			f.NewBasePath = nu.NewDirPath
-
+		if f.IsMovie() {
 			m := models.Movie{
 				File:   f,
 				Actors: nil,
 			}
+
+			m.GetNewName()
+
+			if !m.IsRepeat() {
+				continue
+			}
+
+			m.NewBasePath = nu.DirPath
 
 			mn := models.MovieAndNumber{Movie: &m, Number: 0}
 			on, err := nu.GetMovieNumber(&mn)
@@ -91,6 +139,7 @@ func (nu *NameUpdater) FillMovies() error {
 		m.NewName = nu.UpdateMovieNameWithNumber(&m, i+1)
 	}
 
+	logger.Log("Filled:", len(nu.moviesAndNumbers), "movies")
 	return nil
 }
 
@@ -101,9 +150,9 @@ func (nu *NameUpdater) sortMovies() {
 }
 
 func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
-	parts := strings.Split(m.Name(), ".")
+	parts := strings.Split(m.NewName, ".")
 	if len(parts) != 2 {
-		logger.Error("NameUpdater::GetMovieNumber movie is improper format:", m.Name())
+		logger.Error("NameUpdater::GetMovieNumber movie is improper format:", m.NewName)
 		return -1, artemiserror.New(artemiserror.InvalidName)
 	}
 
@@ -135,7 +184,7 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 }
 
 func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNum int) string {
-	name := m.Name()
+	name := m.NewNameOrName()
 	on := strconv.Itoa(m.Number)
 	i := strings.LastIndex(name, on)
 	if i == -1 {
@@ -151,6 +200,7 @@ func (nu *NameUpdater) RenameMovies() {
 	for _, m := range nu.moviesAndNumbers {
 		op := m.Path()
 		np := m.NewPath()
+
 		if op == np {
 			continue
 		}
@@ -171,6 +221,7 @@ func (nu *NameUpdater) AddMovie(m *models.Movie) error {
 	}
 
 	if on > -1 {
+		mn.Number = on
 		nn := 1
 		if len(nu.moviesAndNumbers) > 0 {
 			if !nu.isSorted {

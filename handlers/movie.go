@@ -17,6 +17,22 @@ type MovieHandler struct {
 	unkIndex      int
 }
 
+func (mh *MovieHandler) CleanseInitialNames() error {
+	if mh.DirPaths == nil {
+		logger.Error("MovieHandler::CleanseInitialNames Cannot fill movies from dirs. DirPaths not initialized")
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
+	}
+
+	for _, p := range *mh.DirPaths {
+		err := OrganizeRepeatNamesInDir(p.Path)
+		if err != nil {
+			logger.Warn("MovieHandler::SetMovies Could organize names in:", p.PathAsString())
+		}
+	}
+
+	return nil
+}
+
 func (mh *MovieHandler) SetMovies() error {
 	if mh.DirPaths == nil {
 		logger.Error("MovieHandler::SetMovies Cannot fill movies from dirs. DirPaths not initialized")
@@ -49,7 +65,7 @@ func (mh *MovieHandler) MoveMovies(toPath string) {
 	mvs := make([]*models.Movie, 0)
 
 	for _, m := range mh.KnownMovies {
-		if len(m.Actors) > 0 {
+		if m.IsKnown() {
 			mvs = append(mvs, m)
 		}
 	}
@@ -71,8 +87,9 @@ func (mh *MovieHandler) MoveMovies(toPath string) {
 		}
 
 		m.GetNewName()
+		m.NewBasePath = ap
 
-		err = utils.RenameFile(m.Path(), m.NewPath())
+		err = MoveMovie(m, External)
 		if err != nil {
 			logger.Warn("`MovieHandler::MoveMovies` could not rename:", m.Path(), "to:", m.NewPath(), err)
 		}
@@ -91,8 +108,9 @@ func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
 		return artemiserror.New(artemiserror.PathNotSet)
 	}
 
-	fh := FileHandler{}
-	err := fh.Rename(m.BasePath, m.RenamePath(), false)
+	m.NewBasePath = m.BasePath
+
+	err := MoveMovie(m, Internal)
 	if err != nil {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Path, "failed to be renamed with error:", err)
 		return err

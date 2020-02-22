@@ -17,7 +17,7 @@ func (ah *ArtemisHandler) Setup(
 	actorFilePath *models.FilePath,
 	cachedNamePath *models.FilePath,
 	toPath *models.FilePath,
-) {
+) error {
 	if ah.ActorHandler == nil {
 		actHand := ActorHandler{
 			DirPaths:   actorDirPaths,
@@ -35,16 +35,22 @@ func (ah *ArtemisHandler) Setup(
 
 	if ah.MovieHandler == nil {
 		mh := MovieHandler{DirPaths: movieDirPaths, NewToPath: ah.ToPath}
-		err := mh.SetMovies()
+		err := mh.CleanseInitialNames()
 		if err != nil {
-			logger.Error("`ArtemisHandler::Setup` could not set movies.", err)
-			panic(err)
+			return err
+		}
+
+		err = mh.SetMovies()
+		if err != nil {
+			return err
 		}
 
 		ah.MovieHandler = &mh
 	}
 
 	ah.ToPath = toPath
+
+	return nil
 }
 
 func (ah *ArtemisHandler) Sort() {
@@ -69,7 +75,6 @@ func (ah *ArtemisHandler) Sort() {
 func (ah *ArtemisHandler) RenameMovies() {
 	ah.MovieHandler.AddKnownMovieNames()
 	ah.MovieHandler.AddUnknownMovieNames()
-	ah.MovieHandler.RenameAllMovies()
 }
 
 func (ah *ArtemisHandler) MoveMovies() {
