@@ -136,7 +136,10 @@ func (nu *NameUpdater) FillMovies() error {
 	nu.isSorted = true
 
 	for i, m := range nu.moviesAndNumbers {
-		m.NewName = nu.UpdateMovieNameWithNumber(&m, i+1)
+		nn, err := nu.UpdateMovieNameWithNumber(&m, i+1)
+		if err == nil {
+			m.NewName = nn
+		}
 	}
 
 	logger.Log("Filled:", len(nu.moviesAndNumbers), "movies")
@@ -237,7 +240,10 @@ func (nu *NameUpdater) AddMovie(m *models.Movie) error {
 			nn = nu.moviesAndNumbers[len(nu.moviesAndNumbers)-1].Number + 1
 		}
 
-		mn.Movie.NewName = nu.UpdateMovieNameWithNumber(&mn, nn)
+		nName, err := nu.UpdateMovieNameWithNumber(&mn, nn)
+		if err == nil {
+			mn.Movie.NewName = nName
+		}
 	}
 
 	nu.moviesAndNumbers = append(nu.moviesAndNumbers, mn)
