@@ -39,7 +39,7 @@ func (ah *ActorHandler) FillActors() error {
 
 func (ah *ActorHandler) FillActorsFromFile() error {
 	if ah.NamesPath == nil {
-		logger.Error("Cannot fill actors from file. FilePath not initialized")
+		logger.Error("ActorHandler::FillActorsFromFile Cannot fill actors from file. FilePath not initialized")
 		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
@@ -65,7 +65,7 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 
 func (ah *ActorHandler) FillActorsFromDirs() error {
 	if ah.DirPaths == nil {
-		logger.Error("Cannot fill actors from dirs. DirPaths not initialized")
+		logger.Error("ActorHandler::FillActorsFromDirs Cannot fill actors from dirs. DirPaths not initialized")
 		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
@@ -74,7 +74,7 @@ func (ah *ActorHandler) FillActorsFromDirs() error {
 		fh := FileHandler{BasePath: p}
 		err := fh.SetFiles()
 		if err != nil {
-			logger.Warn("Could not fill actors from path:", p.PathAsString())
+			logger.Warn("ActorHandler::FillActorsFromDirs Could not fill actors from path:", p.PathAsString())
 			continue
 		}
 
@@ -101,7 +101,7 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 
 	data, err := ioutil.ReadFile(ah.CachedPath.Path)
 	if err != nil {
-		logger.Error("Failed to read temp names file with error:", err)
+		logger.Error("ActorHandler::fillActorsFromCachedFile Failed to read temp names file with error:", err)
 		return err
 	}
 
@@ -119,6 +119,33 @@ func (ah *ActorHandler) fillActorsFromCachedFile() error {
 		}
 
 		ah.Actors[a.FullName()] = &a
+	}
+
+	return nil
+}
+
+func (ah *ActorHandler) WriteActorsToFile() error {
+	if ah.NamesPath == nil {
+		logger.Error("ActorHandler::WriteActorsToFile cannot write actors to file. NamesPath not initialized")
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
+	}
+
+	acts := make([]string, len(ah.Actors))
+	i := 0
+	for n  := range ah.Actors {
+		acts[i] = n
+		i += 1
+	}
+
+	sort.Slice(acts, func(i int, j int) bool {
+		return acts[i] < acts[j]
+	})
+
+	for _, a := range acts {
+		err := utils.AppendTxtToFile(ah.NamesPath.Path, a)
+		if err != nil {
+			logger.Warn("ActorHandler::WriteActorsToFile failed to write name:", a, "to names file", ah.NamesPath.Path)
+		}
 	}
 
 	return nil

@@ -12,6 +12,7 @@ type ArtemisRunType string
 const (
 	Rename             ArtemisRunType = "RENAME"
 	OrganizeStagingDir ArtemisRunType = "ORGANIZE_STAGING_DIR"
+	WriteNames   ArtemisRunType = "WRITE_NAMES_TO_FILE"
 )
 
 func RenameMovies(ac *models.ArtemisConfig) {
@@ -43,6 +44,35 @@ func OrganizeStagingDirectory(ac *models.ArtemisConfig) {
 	err := handlers.OrganizeAllRepeatNamesInDir(ac.StagingDir)
 	if err != nil {
 		logger.Error("OrganizeStagingDirectory failed with error:", err)
+		panic(err)
+	}
+}
+
+func WriteNamesToFile(ac *models.ArtemisConfig) {
+	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
+	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
+	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
+
+	for i, p := range ac.TargetDirs {
+		targetPaths[i] = models.FilePath{Path: p}
+	}
+
+	for i, p := range ac.ActorDirs {
+		actorPaths[i] = models.FilePath{Path: p}
+	}
+
+	ah := handlers.ActorHandler{
+		DirPaths:   &actorPaths,
+		NamesPath:  &actNameFile,
+	}
+
+	err := ah.FillActors()
+	if err != nil {
+		panic(err)
+	}
+
+	err = ah.WriteActorsToFile()
+	if err != nil {
 		panic(err)
 	}
 }
