@@ -52,6 +52,8 @@ func main() {
 		RenameMovies(&ac)
 	case OrganizeStagingDir:
 		OrganizeStagingDirectory(&ac)
+	case WriteNames:
+		WriteNamesToFile(&ac)
 	default:
 		logger.Error("Unknown run type:", rt)
 		panic(artemiserror.New(artemiserror.InvalidParameter))

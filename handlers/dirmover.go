@@ -161,7 +161,7 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 
 	n := parts[0]
 
-	if strings.Contains(n, "scene_") {
+	if m.IsRepeat() {
 		re, err := regexp.Compile(`_[0-9]*_`)
 		if err != nil {
 			logger.Error("GetMovieNumber Could not compile regex", err)

@@ -40,7 +40,9 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 
 	rs := re.ReplaceAll([]byte(name), []byte{'_'})
 
-	return string(*(m.cleanUnderscores(&rs))) + "." + ext, nil
+	nn := string(*(m.cleanUnderscores(&rs))) + "." + ext
+
+	return strings.ToLower(nn), nil
 }
 
 func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
