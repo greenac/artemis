@@ -11,6 +11,7 @@ type ArtemisRunType string
 
 const (
 	Rename             ArtemisRunType = "RENAME"
+	MoveMovies         ArtemisRunType = "MOVE_MOVIES"
 	OrganizeStagingDir ArtemisRunType = "ORGANIZE_STAGING_DIR"
 	WriteNames         ArtemisRunType = "WRITE_NAMES_TO_FILE"
 )
@@ -74,5 +75,12 @@ func WriteNamesToFile(ac *models.ArtemisConfig) {
 	err = ah.WriteActorsToFile()
 	if err != nil {
 		panic(err)
+	}
+}
+
+func MoveMoviesFromStagingToMaster(ac *models.ArtemisConfig) {
+	err := handlers.MoveMovies(ac.StagingDir, ac.ToDir)
+	if err != nil {
+		logger.Error("MoveMoviesFromStagingToMaster could not move movies. Failed with error:", err)
 	}
 }
