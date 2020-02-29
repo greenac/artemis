@@ -126,14 +126,16 @@ func (fh *FileHandler) Rename(oldPath string, newPath string, replaceExisting bo
 func (fh *FileHandler) DoesFileExistAtPath(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsExist(err) {
-			return true, nil
-		} else if os.IsNotExist(err) {
-			return false, nil
+		if os.IsNotExist(err) {
+ 			return false, nil
 		}
 
 		return false, err
 	}
 
-	return false, nil
+	return true, nil
+}
+
+func (fh *FileHandler) RemoveDir(path string) error {
+	return os.Remove(path)
 }

@@ -4,6 +4,8 @@ import (
 	"github.com/greenac/artemis/artemiserror"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
+	"github.com/greenac/artemis/utils"
+	"path"
 	"regexp"
 	"sort"
 	"strconv"
@@ -51,7 +53,7 @@ func OrganizeRepeatNamesInDir(dirPath string) error {
 		m.Movie.NewBasePath = dirPath
 	}
 
-	nu.RenameMovies()
+	nu.RenameMovies(false)
 
 	return nil
 }
@@ -75,14 +77,68 @@ func MoveMovie(m *models.Movie, ty MoveMovieType) error {
 		return err
 	}
 
-	//nu.RenameMovies()
-
 	err = nu.AddMovie(m)
 	if err != nil {
 		return err
 	}
 
-	nu.RenameMovies()
+	nu.RenameMovies(false)
+
+	return nil
+}
+
+func MoveMovies(fromDir string, toDir string) error {
+	fh := FileHandler{BasePath: models.FilePath{Path: fromDir}}
+	err := fh.SetFiles()
+	if err != nil {
+		return err
+	}
+
+	for _, f := range fh.Files {
+		if !f.IsDir() {
+			continue
+		}
+
+		logger.Log("\n\nMoving movies for:", f.Name())
+
+		fh2 := FileHandler{BasePath: models.FilePath{Path: f.Path()}}
+		err = fh2.SetFiles()
+		if err != nil {
+			logger.Error("MoveMovies file handler could not set movies for:", f.Path(), err)
+			continue
+		}
+
+		np := path.Join(toDir, f.Name())
+
+		err = utils.CreateDir(np)
+		if err != nil {
+			continue
+		}
+
+		for i, f2 := range fh2.Files {
+			if !f2.IsMovie() {
+				continue
+			}
+
+			f2.NewBasePath = np
+
+			m := models.Movie{File:   f2}
+			m.GetNewName()
+
+			err = MoveMovie(&m, External)
+			if err != nil {
+				logger.Warn("Failed to move movie:", i, ":", m.NewPath())
+				continue
+			}
+
+			logger.Log("Moved movie:", i, ":", m.NewPath())
+		}
+
+		err = fh2.RemoveDir(f.Path())
+		if err != nil {
+			logger.Warn("Could not remove directory:", f.Path(), "there are still movies present")
+		}
+	}
 
 	return nil
 }
@@ -142,7 +198,6 @@ func (nu *NameUpdater) FillMovies() error {
 		}
 	}
 
-	logger.Log("Filled:", len(nu.moviesAndNumbers), "movies")
 	return nil
 }
 
@@ -205,7 +260,7 @@ func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNu
 	return string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1], nil
 }
 
-func (nu *NameUpdater) RenameMovies() {
+func (nu *NameUpdater) RenameMovies(replace bool) {
 	for _, m := range nu.moviesAndNumbers {
 		op := m.Path()
 		np := m.NewPath()
@@ -214,7 +269,7 @@ func (nu *NameUpdater) RenameMovies() {
 			continue
 		}
 
-		err := nu.fh.Rename(op, np, true)
+		err := nu.fh.Rename(op, np, replace)
 		if err != nil {
 			logger.Warn("NameUpdater::RenameMovies could not rename movie at:", op, "to:", np, err)
 		}

@@ -50,6 +50,8 @@ func main() {
 	switch rt {
 	case Rename:
 		RenameMovies(&ac)
+	case MoveMovies:
+		MoveMoviesFromStagingToMaster(&ac)
 	case OrganizeStagingDir:
 		OrganizeStagingDirectory(&ac)
 	case WriteNames:
