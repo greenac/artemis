@@ -12,7 +12,7 @@ type ArtemisRunType string
 const (
 	Rename             ArtemisRunType = "RENAME"
 	OrganizeStagingDir ArtemisRunType = "ORGANIZE_STAGING_DIR"
-	WriteNames   ArtemisRunType = "WRITE_NAMES_TO_FILE"
+	WriteNames         ArtemisRunType = "WRITE_NAMES_TO_FILE"
 )
 
 func RenameMovies(ac *models.ArtemisConfig) {
@@ -62,8 +62,8 @@ func WriteNamesToFile(ac *models.ArtemisConfig) {
 	}
 
 	ah := handlers.ActorHandler{
-		DirPaths:   &actorPaths,
-		NamesPath:  &actNameFile,
+		DirPaths:  &actorPaths,
+		NamesPath: &actNameFile,
 	}
 
 	err := ah.FillActors()

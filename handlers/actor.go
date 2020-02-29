@@ -132,7 +132,7 @@ func (ah *ActorHandler) WriteActorsToFile() error {
 
 	acts := make([]string, len(ah.Actors))
 	i := 0
-	for n  := range ah.Actors {
+	for n := range ah.Actors {
 		acts[i] = n
 		i += 1
 	}
