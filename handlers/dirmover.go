@@ -153,6 +153,10 @@ func (nu *NameUpdater) sortMovies() {
 }
 
 func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
+	if !m.IsRepeat() {
+		return -1, nil
+	}
+
 	parts := strings.Split(m.NewName, ".")
 	if len(parts) != 2 {
 		logger.Error("NameUpdater::GetMovieNumber movie is improper format:", m.NewName)
@@ -161,29 +165,25 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 
 	n := parts[0]
 
-	if m.IsRepeat() {
-		re, err := regexp.Compile(`_[0-9]*_`)
-		if err != nil {
-			logger.Error("GetMovieNumber Could not compile regex", err)
-			return -1, err
-		}
-
-		matches := re.FindAllString(n, -1)
-		if len(matches) == 0 {
-			return -1, nil
-		}
-
-		m := matches[len(matches)-1]
-		m = strings.ReplaceAll(m, "_", "")
-		mi, err := strconv.Atoi(m)
-		if err != nil {
-			return -1, nil
-		}
-
-		return mi, nil
+	re, err := regexp.Compile(`_[0-9]*_`)
+	if err != nil {
+		logger.Error("NameUpdater::GetMovieNumber Could not compile regex", err)
+		return -1, err
 	}
 
-	return -1, nil
+	matches := re.FindAllString(n, -1)
+	if len(matches) == 0 {
+		return -1, nil
+	}
+
+	match := matches[len(matches)-1]
+	match = strings.ReplaceAll(match, "_", "")
+	mi, err := strconv.Atoi(match)
+	if err != nil {
+		return -1, nil
+	}
+
+	return mi, nil
 }
 
 func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNum int) (string, error) {
