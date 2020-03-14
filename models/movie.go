@@ -4,14 +4,24 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/utils"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
-var repeatMovieFrags = []string{"scene_"}
+type MovieRepeatType string
+
+const (
+	RepeatTypeScene MovieRepeatType = "scene_"
+	RepeatType720 MovieRepeatType = "_720_"
+)
+
+var repeatMovieFrags = []MovieRepeatType{RepeatTypeScene, RepeatType720}
 
 type Movie struct {
 	File
 	Actors []*Actor
+	RepeatType MovieRepeatType
+	RepeatNumber int
 }
 
 func (m *Movie) AddActor(a Actor) {
@@ -113,7 +123,6 @@ func (m *Movie) AddName(a *Actor) string {
 		newName, err = utils.AddNameToMovieAfterName(newName, *a.LastName, nextName)
 	}
 
-	logger.Log("new name is:", newName)
 	return newName
 }
 
@@ -159,13 +168,45 @@ func (m *Movie) IsKnown() bool {
 }
 
 func (m *Movie) IsRepeat() bool {
-	rep := false
 	for _, f := range repeatMovieFrags {
-		if strings.Contains(m.Name(), f) || strings.Contains(m.NewName, f) {
-			rep = true
-			break
+		if strings.Contains(m.Name(), string(f)) || strings.Contains(m.NewName, string(f)) {
+			return true
 		}
 	}
 
-	return rep
+	return false
+}
+
+func (m *Movie) addRepeatNumberForSceneToNewName(newNum int) {
+	parts := strings.Split(m.NewNameOrName(), ".")
+	if len(parts) != 2 {
+		return
+	}
+
+	name := parts[0]
+	on := strconv.Itoa(m.RepeatNumber)
+	i := strings.LastIndex(name, on)
+	if i == -1 {
+		return
+	}
+
+	rn := []rune(name)
+	m.NewName = string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1]
+}
+
+func (m *Movie) addRepeatNumberFor720ToNewName(newNum int) {
+	parts := strings.Split(m.NewNameOrName(), ".")
+	if len(parts) != 2 {
+		return
+	}
+
+	name := parts[0]
+	on := strconv.Itoa(m.RepeatNumber)
+	i := strings.Index(name, on)
+	if i == -1 {
+		return
+	}
+	
+	rn := []rune(name)
+	m.NewName = string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1]
 }

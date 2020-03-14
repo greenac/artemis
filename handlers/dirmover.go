@@ -48,9 +48,9 @@ func OrganizeRepeatNamesInDir(dirPath string) error {
 		return err
 	}
 
-	for _, m := range nu.moviesAndNumbers {
-		m.Movie.BasePath = dirPath
-		m.Movie.NewBasePath = dirPath
+	for _, m := range nu.movies {
+		m.BasePath = dirPath
+		m.NewBasePath = dirPath
 	}
 
 	nu.RenameMovies(false)
@@ -146,7 +146,7 @@ func MoveMovies(fromDir string, toDir string) error {
 type NameUpdater struct {
 	DirPath          string
 	fh               FileHandler
-	moviesAndNumbers []models.MovieAndNumber
+	movies           []models.Movie
 	isSorted         bool
 }
 
@@ -158,7 +158,7 @@ func (nu *NameUpdater) FillMovies() error {
 		return err
 	}
 
-	mvs := make([]models.MovieAndNumber, 0)
+	mvs := make([]models.Movie, 0)
 
 	for _, f := range nu.fh.Files {
 		if f.IsMovie() {
@@ -174,24 +174,23 @@ func (nu *NameUpdater) FillMovies() error {
 			}
 
 			m.NewBasePath = nu.DirPath
-
-			mn := models.MovieAndNumber{Movie: &m, Number: 0}
-			on, err := nu.GetMovieNumber(&mn)
+			m.RepeatNumber = 0
+			on, err := nu.GetMovieNumber(&m)
 			if err != nil {
 				continue
 			}
 
-			mn.Number = on
+			m.RepeatNumber = on
 
-			mvs = append(mvs, mn)
+			mvs = append(mvs, m)
 		}
 	}
 
-	nu.moviesAndNumbers = mvs
+	nu.movies = mvs
 	nu.sortMovies()
 	nu.isSorted = true
 
-	for i, m := range nu.moviesAndNumbers {
+	for i, m := range nu.movies {
 		nn, err := nu.UpdateMovieNameWithNumber(&m, i+1)
 		if err == nil {
 			m.NewName = nn
@@ -202,12 +201,12 @@ func (nu *NameUpdater) FillMovies() error {
 }
 
 func (nu *NameUpdater) sortMovies() {
-	sort.SliceStable(nu.moviesAndNumbers, func(i, j int) bool {
-		return nu.moviesAndNumbers[i].Number < nu.moviesAndNumbers[j].Number
+	sort.SliceStable(nu.movies, func(i, j int) bool {
+		return nu.movies[i].RepeatNumber < nu.movies[j].RepeatNumber
 	})
 }
 
-func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
+func (nu *NameUpdater) GetMovieNumber(m *models.Movie) (int, error) {
 	if !m.IsRepeat() {
 		return -1, nil
 	}
@@ -241,7 +240,8 @@ func (nu *NameUpdater) GetMovieNumber(m *models.MovieAndNumber) (int, error) {
 	return mi, nil
 }
 
-func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNum int) (string, error) {
+// TODO: Move this logic to movie model
+func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.Movie, newNum int) (string, error) {
 	parts := strings.Split(m.NewNameOrName(), ".")
 	if len(parts) != 2 {
 		logger.Error("NameUpdater::UpdateMovieNameWithNumber movie is improper format:", m.NewNameOrName())
@@ -249,7 +249,7 @@ func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNu
 	}
 
 	name := parts[0]
-	on := strconv.Itoa(m.Number)
+	on := strconv.Itoa(m.RepeatNumber)
 	i := strings.LastIndex(name, on)
 	if i == -1 {
 		return m.NewName, nil
@@ -261,7 +261,7 @@ func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.MovieAndNumber, newNu
 }
 
 func (nu *NameUpdater) RenameMovies(replace bool) {
-	for _, m := range nu.moviesAndNumbers {
+	for _, m := range nu.movies {
 		op := m.Path()
 		np := m.NewPath()
 
@@ -269,39 +269,40 @@ func (nu *NameUpdater) RenameMovies(replace bool) {
 			continue
 		}
 
-		err := nu.fh.Rename(op, np, replace)
-		if err != nil {
-			logger.Warn("NameUpdater::RenameMovies could not rename movie at:", op, "to:", np, err)
-		}
+		logger.Debug("Will rename movie from:\n", op, "\nto:\n", np)
+
+		//err := nu.fh.Rename(op, np, replace)
+		//if err != nil {
+		//	logger.Warn("NameUpdater::RenameMovies could not rename movie at:", op, "to:", np, err)
+		//}
 	}
 }
 
 func (nu *NameUpdater) AddMovie(m *models.Movie) error {
-	mn := models.MovieAndNumber{Movie: m, Number: 0}
-
-	on, err := nu.GetMovieNumber(&mn)
+	on, err := nu.GetMovieNumber(m)
 	if err != nil {
 		return err
 	}
 
 	if on > -1 {
-		mn.Number = on
+		m.RepeatNumber = on
 		nn := 1
-		if len(nu.moviesAndNumbers) > 0 {
+		if len(nu.movies) > 0 {
 			if !nu.isSorted {
 				nu.sortMovies()
+				nu.isSorted = true
 			}
 
-			nn = nu.moviesAndNumbers[len(nu.moviesAndNumbers)-1].Number + 1
+			nn = nu.movies[len(nu.movies)-1].RepeatNumber + 1
 		}
 
-		nName, err := nu.UpdateMovieNameWithNumber(&mn, nn)
+		nName, err := nu.UpdateMovieNameWithNumber(m, nn)
 		if err == nil {
-			mn.Movie.NewName = nName
+			m.NewName = nName
 		}
 	}
 
-	nu.moviesAndNumbers = append(nu.moviesAndNumbers, mn)
+	nu.movies = append(nu.movies, *m)
 
 	return nil
 }
