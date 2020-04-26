@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package artemis;
+
+option go_package = "github.com/greenac/artemis/protomodels";
+
+import "actor.proto";
+
+message Movie {
+    string name = 1;
+    repeated Actor actors = 2;
+}
