@@ -14,54 +14,30 @@ const (
 )
 
 type Actor struct {
-	FirstName  *string
-	LastName   *string
-	MiddleName *string
-}
-
-func (a *Actor) GetFirstName() string {
-	if a.FirstName == nil {
-		return ""
-	}
-
-	return *a.FirstName
-}
-
-func (a *Actor) GetMiddleName() string {
-	if a.MiddleName == nil {
-		return ""
-	}
-
-	return *a.MiddleName
-}
-
-func (a *Actor) GetLastName() string {
-	if a.LastName == nil {
-		return ""
-	}
-
-	return *a.LastName
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	MiddleName string `json:"middleName"`
 }
 
 func (a *Actor) FullName() string {
 	name := ""
-	if a.FirstName != nil {
-		name += *a.FirstName
+	if a.FirstName != "" {
+		name += a.FirstName
 	}
 
-	if a.MiddleName != nil {
+	if a.MiddleName != "" {
 		if name == "" {
-			name = *a.MiddleName
+			name = a.MiddleName
 		} else {
-			name += "_" + *a.MiddleName
+			name += "_" + a.MiddleName
 		}
 	}
 
-	if a.LastName != nil {
+	if a.LastName != "" {
 		if name == "" {
-			name = *a.LastName
+			name = a.LastName
 		} else {
-			name += "_" + *a.LastName
+			name += "_" + a.LastName
 		}
 	}
 
@@ -71,16 +47,16 @@ func (a *Actor) FullName() string {
 func (a *Actor) IsIn(m *Movie) bool {
 	n := strings.ToLower(m.Name())
 	isIn := false
-	if a.FirstName != nil {
-		isIn = strings.Contains(n, *a.FirstName)
+	if a.FirstName != "" {
+		isIn = strings.Contains(n, a.FirstName)
 	}
 
-	if isIn && a.MiddleName != nil {
-		isIn = strings.Contains(n, *a.MiddleName)
+	if isIn && a.MiddleName != "" {
+		isIn = strings.Contains(n, a.MiddleName)
 	}
 
-	if isIn && a.LastName != nil {
-		isIn = strings.Contains(n, *a.LastName)
+	if isIn && a.LastName != "" {
+		isIn = strings.Contains(n, a.LastName)
 	}
 
 	return isIn
@@ -105,14 +81,14 @@ func (a *Actor) MatchPartial(pName string, np NamePart) bool {
 
 	switch np {
 	case FirstName:
-		match = len(pName) <= len(*a.FirstName)
-		name = strings.ToLower(*a.FirstName)
+		match = len(pName) <= len(a.FirstName)
+		name = strings.ToLower(a.FirstName)
 	case MiddleName:
-		match = len(pName) <= len(*a.MiddleName)
-		name = strings.ToLower(*a.MiddleName)
+		match = len(pName) <= len(a.MiddleName)
+		name = strings.ToLower(a.MiddleName)
 	case LastName:
-		match = len(pName) <= len(*a.LastName)
-		name = strings.ToLower(*a.LastName)
+		match = len(pName) <= len(a.LastName)
+		name = strings.ToLower(a.LastName)
 	}
 
 	if !match {
@@ -147,15 +123,15 @@ func (a *Actor) MatchWhole(frag string) bool {
 }
 
 func (a *Actor) HasFirstMiddleLastName() bool {
-	return a.FirstName != nil && a.MiddleName != nil && a.LastName != nil
+	return a.FirstName != "" && a.MiddleName != "" && a.LastName != ""
 }
 
 func (a *Actor) HasFirstLastName() bool {
-	return a.FirstName != nil && a.LastName != nil
+	return a.FirstName != "" && a.LastName != ""
 }
 
 func (a *Actor) HasFirstName() bool {
-	return a.FirstName != nil
+	return a.FirstName != ""
 }
 
 func (a *Actor) FullNameNoUnderscores() string {

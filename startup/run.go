@@ -118,14 +118,12 @@ func RunServer(ac *models.ArtemisConfig) {
 	http.HandleFunc("/api/all-actors", func (w http.ResponseWriter, r *http.Request) {
 		logger.Log("Getting all actors...")
 
-		err := json.NewEncoder(w).Encode(ah.ActorHandler.Actors)
-		s := http.StatusOK
+		acts := ah.ActorHandler.SortedActors()
+		err := json.NewEncoder(w).Encode(acts)
 		if err != nil {
 			logger.Error("Failed to encode actor json", err)
-			s = http.StatusInternalServerError
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-
-		w.WriteHeader(s)
 	})
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", ac.Url, ac.Port), nil))

@@ -105,22 +105,22 @@ func (m *Movie) AddName(a *Actor) string {
 	}
 
 	newName := m.NewName
-	newName, err := utils.AddPrecedingUnderscore(*a.FirstName, newName)
+	newName, err := utils.AddPrecedingUnderscore(a.FirstName, newName)
 	if err == nil {
-		newName, err = utils.AddFollowingUnderscore(*a.FirstName, newName)
+		newName, err = utils.AddFollowingUnderscore(a.FirstName, newName)
 	} else {
-		newName, err = utils.AddTailingNameToMovie(newName, *a.FirstName)
+		newName, err = utils.AddTailingNameToMovie(newName, a.FirstName)
 	}
 
-	nextName := *a.FirstName
+	nextName := a.FirstName
 
-	if a.MiddleName != nil {
-		newName, err = utils.AddNameToMovieAfterName(newName, *a.MiddleName, nextName)
-		nextName = *a.MiddleName
+	if a.MiddleName != "" {
+		newName, err = utils.AddNameToMovieAfterName(newName, a.MiddleName, nextName)
+		nextName = a.MiddleName
 	}
 
-	if a.LastName != nil {
-		newName, err = utils.AddNameToMovieAfterName(newName, *a.LastName, nextName)
+	if a.LastName != "" {
+		newName, err = utils.AddNameToMovieAfterName(newName, a.LastName, nextName)
 	}
 
 	return newName
