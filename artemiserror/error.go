@@ -7,6 +7,7 @@ const (
 	PathNotSet         ExceptionType = "Path not set"
 	InvalidName        ExceptionType = "Invalid name"
 	InvalidParameter   ExceptionType = "Invalid parameter"
+	MongoNotSetUp      ExceptionType = "Mongo Not Setup"
 )
 
 type ArtemisError struct {

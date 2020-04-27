@@ -113,9 +113,8 @@ func RunServer(ac *models.ArtemisConfig) {
 		panic(err)
 	}
 
-
 	logger.Log("Starting artemis server on", fmt.Sprintf("%s:%d", ac.Url, ac.Port))
-	http.HandleFunc("/api/all-actors", func (w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/all-actors", func(w http.ResponseWriter, r *http.Request) {
 		logger.Log("Getting all actors...")
 
 		acts := ah.ActorHandler.SortedActors()
