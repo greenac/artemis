@@ -12,15 +12,15 @@ type MovieRepeatType string
 
 const (
 	RepeatTypeScene MovieRepeatType = "scene_"
-	RepeatType720 MovieRepeatType = "_720_"
+	RepeatType720   MovieRepeatType = "_720_"
 )
 
 var repeatMovieFrags = []MovieRepeatType{RepeatTypeScene, RepeatType720}
 
 type Movie struct {
 	File
-	Actors []*Actor
-	RepeatType MovieRepeatType
+	Actors       []*Actor
+	RepeatType   MovieRepeatType
 	RepeatNumber int
 }
 
@@ -206,7 +206,7 @@ func (m *Movie) addRepeatNumberFor720ToNewName(newNum int) {
 	if i == -1 {
 		return
 	}
-	
+
 	rn := []rune(name)
 	m.NewName = string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1]
 }

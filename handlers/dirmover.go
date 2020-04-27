@@ -122,7 +122,7 @@ func MoveMovies(fromDir string, toDir string) error {
 
 			f2.NewBasePath = np
 
-			m := models.Movie{File:   f2}
+			m := models.Movie{File: f2}
 			m.GetNewName()
 
 			err = MoveMovie(&m, External)
@@ -144,10 +144,10 @@ func MoveMovies(fromDir string, toDir string) error {
 }
 
 type NameUpdater struct {
-	DirPath          string
-	fh               FileHandler
-	movies           []models.Movie
-	isSorted         bool
+	DirPath  string
+	fh       FileHandler
+	movies   []models.Movie
+	isSorted bool
 }
 
 func (nu *NameUpdater) FillMovies() error {
