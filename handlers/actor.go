@@ -151,6 +151,21 @@ func (ah *ActorHandler) WriteActorsToFile() error {
 	return nil
 }
 
+func (ah *ActorHandler) SortedActors() []*models.Actor {
+	acts := make([]*models.Actor, len(ah.Actors))
+	i := 0
+	for _, a := range ah.Actors {
+		acts[i] = a
+		i += 1
+	}
+
+	sort.Slice(acts, func(i int, j int) bool {
+		return acts[i].FullName() < acts[j].FullName()
+	})
+
+	return acts
+}
+
 func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 	if len(name) == 0 {
 		logger.Error("ActorHandler::createActor cannot create actor from name:", name)
@@ -166,11 +181,11 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 	var a models.Actor
 	switch len(parts) {
 	case 1:
-		a = models.Actor{FirstName: &parts[0]}
+		a = models.Actor{FirstName: parts[0]}
 	case 2:
-		a = models.Actor{FirstName: &parts[0], LastName: &parts[1]}
+		a = models.Actor{FirstName: parts[0], LastName: parts[1]}
 	case 3:
-		a = models.Actor{FirstName: &parts[0], MiddleName: &parts[1], LastName: &parts[2]}
+		a = models.Actor{FirstName: parts[0], MiddleName: parts[1], LastName: parts[2]}
 	default:
 		logger.Error("Cannot parse actor name:", name)
 		return models.Actor{}, errors.New("ActorNameInvalid")

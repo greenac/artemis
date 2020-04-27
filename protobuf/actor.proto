@@ -5,7 +5,7 @@ package artemis;
 option go_package = "github.com/greenac/artemis/protomodels";
 
 message Actor {
-    string fistName = 1;
+    string firstName = 1;
     string middleName = 2;
     string lastName = 3;
 }
