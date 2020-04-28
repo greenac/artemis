@@ -20,6 +20,15 @@ type ActorHandler struct {
 	ToPath     *models.FilePath
 }
 
+func (ah *ActorHandler) SaveActorsToDb(acts *[]models.Actor) {
+	for _, a := range *acts {
+		err := a.Save()
+		if err != nil {
+			logger.Warn("ActorHandler::SaveActorsToDb could not save actor:", a.GetIdentifier(), err)
+		}
+	}
+}
+
 func (ah *ActorHandler) FillActors() error {
 	ah.Actors = make(map[string]*models.Actor)
 	if err := ah.FillActorsFromDirs(); err != nil {
@@ -168,7 +177,7 @@ func (ah *ActorHandler) SortedActors() []*models.Actor {
 
 func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 	if len(name) == 0 {
-		logger.Error("ActorHandler::createActor cannot create actor from name:", name)
+		logger.Error("ActorHandler::createActor invalid name:", name)
 		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
@@ -181,14 +190,20 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 	var a models.Actor
 	switch len(parts) {
 	case 1:
-		a = models.Actor{FirstName: parts[0]}
+		a = models.NewActor(parts[0], "", "")
 	case 2:
-		a = models.Actor{FirstName: parts[0], LastName: parts[1]}
+		a = models.NewActor(parts[0], "", parts[1])
 	case 3:
-		a = models.Actor{FirstName: parts[0], MiddleName: parts[1], LastName: parts[2]}
+		a = models.NewActor(parts[0], parts[1], parts[2])
 	default:
 		logger.Error("Cannot parse actor name:", name)
 		return models.Actor{}, errors.New("ActorNameInvalid")
+	}
+
+	_, _, err := models.CreateIfDoesNotExist(a)
+	if err != nil {
+		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
+		return a, err
 	}
 
 	return a, nil
