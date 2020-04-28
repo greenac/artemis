@@ -1,7 +1,7 @@
-package models
+package config
 
 type MongoConfig struct {
-	Url         string `json:"targetDirs"`
+	Url         string `json:"url"`
 	Database    string `json:"database"`
 	Collections struct {
 		Actors string `json:"actors"`

@@ -2,10 +2,9 @@ package db
 
 import (
 	"context"
-	"errors"
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/config"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/models"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
@@ -18,10 +17,15 @@ const (
 	MovieCollection CollectionType = "movie"
 )
 
+type CollectionAndContext struct {
+	Col *mongo.Collection
+	Ctx context.Context
+}
+
 const contextTime = 10 * time.Second
 
 type database struct {
-	Config *models.MongoConfig
+	Config *config.MongoConfig
 	client *mongo.Client
 	ctx    *context.Context
 }
@@ -29,7 +33,7 @@ type database struct {
 func (db *database) getClient() (*mongo.Client, error) {
 	if db.client == nil {
 		ctx := db.getContext()
-		cl, err := mongo.Connect(*ctx, options.Client().ApplyURI(db.Config.Url))
+		cl, err := mongo.Connect(ctx, options.Client().ApplyURI(db.Config.Url))
 		if err != nil {
 			logger.Error("Database::setClient failed to connect to mongo on:", db.Config.Url, err)
 			return nil, err
@@ -41,18 +45,14 @@ func (db *database) getClient() (*mongo.Client, error) {
 	return db.client, nil
 }
 
-func (db *database) getContext() *context.Context {
-	if db.ctx == nil {
-		ctx, _ := context.WithTimeout(context.Background(), contextTime)
-		db.ctx = &ctx
-	}
-
-	return db.ctx
+func (db *database) getContext() context.Context {
+	c, _ := context.WithTimeout(context.Background(), contextTime)
+	return c
 }
 
-func (db *database) getCollection(col CollectionType) *mongo.Collection {
+func (db *database) getCollection(ct CollectionType) *mongo.Collection {
 	var c string
-	switch col {
+	switch ct {
 	case ActorCollection:
 		c = db.Config.Collections.Actors
 	case MovieCollection:
@@ -65,17 +65,33 @@ func (db *database) getCollection(col CollectionType) *mongo.Collection {
 
 var db *database = nil
 
-func SetupMongo(config *models.MongoConfig) {
+func SetupMongo(config *config.MongoConfig) {
 	if db == nil {
 		d := database{Config: config}
 		db = &d
 	}
 }
 
-func GetCollection(col CollectionType) (*mongo.Collection, error) {
+func GetCollection(ct CollectionType) (*mongo.Collection, error) {
 	if db == nil {
 		return nil, artemiserror.New(artemiserror.MongoNotSetUp)
 	}
 
-	return db.getCollection(col), nil
+	c := db.getCollection(ct)
+
+	return c, nil
+}
+
+func GetCollectionAndContext(ct CollectionType) (*CollectionAndContext, error) {
+	col, err := GetCollection(ct)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.Background()
+
+	return &CollectionAndContext{
+		Col: col,
+		Ctx: ctx,
+	}, nil
 }

@@ -18,17 +18,23 @@ const (
 var repeatMovieFrags = []MovieRepeatType{RepeatTypeScene, RepeatType720}
 
 type Movie struct {
+	Model
 	File
 	Actors       []*Actor
 	RepeatType   MovieRepeatType
 	RepeatNumber int
 }
 
-func (m *Movie) AddActor(a Actor) {
+func (m Movie) GetIdentifier() string {
+	m.Identifier = m.GetNewName()
+	return m.Identifier
+}
+
+func (m Movie) AddActor(a Actor) {
 	m.Actors = append(m.Actors, &a)
 }
 
-func (m *Movie) AddActorNames() {
+func (m Movie) AddActorNames() {
 	m.GetNewName()
 
 	for _, a := range m.Actors {
@@ -36,7 +42,7 @@ func (m *Movie) AddActorNames() {
 	}
 }
 
-func (m *Movie) FormattedName() (formattedName string, error error) {
+func (m Movie) FormattedName() (formattedName string, error error) {
 	name := m.removeRepeats()
 	parts := strings.Split(name, ".")
 	ext := parts[len(parts)-1]
@@ -55,7 +61,7 @@ func (m *Movie) FormattedName() (formattedName string, error error) {
 	return strings.ToLower(nn), nil
 }
 
-func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
+func (m Movie) cleanUnderscores(name *[]byte) *[]byte {
 	cln := make([]byte, 0)
 	fndUn := false
 	for _, c := range *name {
@@ -99,7 +105,7 @@ func (m *Movie) cleanUnderscores(name *[]byte) *[]byte {
 	return &cln
 }
 
-func (m *Movie) AddName(a *Actor) string {
+func (m Movie) AddName(a *Actor) string {
 	if utils.IsNameFormatCorrect(m.NewName, a.FullName()) {
 		return m.NewName
 	}
@@ -126,17 +132,17 @@ func (m *Movie) AddName(a *Actor) string {
 	return newName
 }
 
-func (m *Movie) UpdateNewName(a *Actor) {
+func (m Movie) UpdateNewName(a *Actor) {
 	m.NewName = m.AddName(a)
 }
 
-func (m *Movie) AddActorsNames() {
+func (m Movie) AddActorsNames() {
 	for _, a := range m.Actors {
 		m.UpdateNewName(a)
 	}
 }
 
-func (m *Movie) GetNewName() string {
+func (m Movie) GetNewName() string {
 	if m.NewName == "" {
 		nn, err := m.FormattedName()
 		if err != nil {
@@ -149,7 +155,7 @@ func (m *Movie) GetNewName() string {
 	return m.NewName
 }
 
-func (m *Movie) removeRepeats() string {
+func (m Movie) removeRepeats() string {
 	name := m.Name()
 	if m.IsRepeat() {
 		re, err := regexp.Compile(`\\(.+?\\)`)
@@ -163,11 +169,11 @@ func (m *Movie) removeRepeats() string {
 	return strings.ReplaceAll(name, " copy", "")
 }
 
-func (m *Movie) IsKnown() bool {
+func (m Movie) IsKnown() bool {
 	return len(m.Actors) > 0
 }
 
-func (m *Movie) IsRepeat() bool {
+func (m Movie) IsRepeat() bool {
 	for _, f := range repeatMovieFrags {
 		if strings.Contains(m.Name(), string(f)) || strings.Contains(m.NewName, string(f)) {
 			return true
@@ -177,7 +183,7 @@ func (m *Movie) IsRepeat() bool {
 	return false
 }
 
-func (m *Movie) addRepeatNumberForSceneToNewName(newNum int) {
+func (m Movie) addRepeatNumberForSceneToNewName(newNum int) {
 	parts := strings.Split(m.NewNameOrName(), ".")
 	if len(parts) != 2 {
 		return
@@ -194,7 +200,7 @@ func (m *Movie) addRepeatNumberForSceneToNewName(newNum int) {
 	m.NewName = string(append(rn[:i], append([]rune(strconv.Itoa(newNum)), rn[i+len(on):]...)...)) + "." + parts[1]
 }
 
-func (m *Movie) addRepeatNumberFor720ToNewName(newNum int) {
+func (m Movie) addRepeatNumberFor720ToNewName(newNum int) {
 	parts := strings.Split(m.NewNameOrName(), ".")
 	if len(parts) != 2 {
 		return

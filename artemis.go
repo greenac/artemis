@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/config"
 	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/startup"
 	"github.com/joho/godotenv"
 	"io/ioutil"
@@ -37,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	ac := models.ArtemisConfig{}
+	ac := config.ArtemisConfig{}
 	err = json.Unmarshal(data, &ac)
 	if err != nil {
 		logger.Error("failed to unmarshal config file json")
