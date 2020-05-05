@@ -10,10 +10,10 @@ import (
 
 type MovieHandler struct {
 	DirPaths      *[]models.FilePath
-	Movies        []models.Movie
+	Movies        []models.SysMovie
 	NewToPath     *models.FilePath
-	KnownMovies   []*models.Movie
-	UnknownMovies []*models.Movie
+	KnownMovies   []*models.SysMovie
+	UnknownMovies []*models.SysMovie
 	unkIndex      int
 }
 
@@ -39,7 +39,7 @@ func (mh *MovieHandler) SetMovies() error {
 		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
-	mvs := make([]models.Movie, 0)
+	mvs := make([]models.SysMovie, 0)
 	for _, p := range *mh.DirPaths {
 		fh := FileHandler{BasePath: p}
 		err := fh.SetFiles()
@@ -50,7 +50,7 @@ func (mh *MovieHandler) SetMovies() error {
 
 		for _, f := range fh.Files {
 			if f.IsMovie() {
-				m := models.Movie{File: f}
+				m := models.SysMovie{File: f}
 				mvs = append(mvs, m)
 			}
 		}
@@ -62,7 +62,7 @@ func (mh *MovieHandler) SetMovies() error {
 }
 
 func (mh *MovieHandler) MoveMovies(toPath string) {
-	mvs := make([]*models.Movie, 0)
+	mvs := make([]*models.SysMovie, 0)
 
 	for _, m := range mh.KnownMovies {
 		if m.IsKnown() {
@@ -96,13 +96,13 @@ func (mh *MovieHandler) MoveMovies(toPath string) {
 	}
 }
 
-func (mh *MovieHandler) RenameMovies(mvs []*models.Movie) {
+func (mh *MovieHandler) RenameMovies(mvs []*models.SysMovie) {
 	for _, m := range mvs {
 		mh.RenameMovie(m)
 	}
 }
 
-func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
+func (mh *MovieHandler) RenameMovie(m *models.SysMovie) error {
 	if m.BasePath == "" {
 		logger.Warn("`MovieHandler::RenameMovie` movie:", m.Name(), "does not have path set")
 		return artemiserror.New(artemiserror.PathNotSet)
@@ -119,15 +119,15 @@ func (mh *MovieHandler) RenameMovie(m *models.Movie) error {
 	return nil
 }
 
-func (mh *MovieHandler) AddKnownMovie(m models.Movie) {
+func (mh *MovieHandler) AddKnownMovie(m models.SysMovie) {
 	mh.KnownMovies = append(mh.KnownMovies, &m)
 }
 
-func (mh *MovieHandler) AddUnknownMovie(m models.Movie) {
+func (mh *MovieHandler) AddUnknownMovie(m models.SysMovie) {
 	mh.UnknownMovies = append(mh.UnknownMovies, &m)
 }
 
-func (mh *MovieHandler) UpdateUnknownMovies(unMvs *[]*models.Movie) {
+func (mh *MovieHandler) UpdateUnknownMovies(unMvs *[]*models.SysMovie) {
 	mh.UnknownMovies = *unMvs
 }
 
@@ -144,7 +144,7 @@ func (mh *MovieHandler) AddUnknownMovieNames() {
 }
 
 func (mh *MovieHandler) RenameAllMovies() {
-	mvs := make([]*models.Movie, 0)
+	mvs := make([]*models.SysMovie, 0)
 	for _, m := range mh.KnownMovies {
 		if m.NewName != m.Info.Name() {
 			mvs = append(mvs, m)
@@ -164,7 +164,7 @@ func (mh *MovieHandler) IncrementUnknownIndex() {
 	mh.unkIndex += 1
 }
 
-func (mh *MovieHandler) CurrentUnknownMovie() *models.Movie {
+func (mh *MovieHandler) CurrentUnknownMovie() *models.SysMovie {
 	return mh.UnknownMovies[mh.unkIndex]
 }
 

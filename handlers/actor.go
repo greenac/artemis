@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/db"
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/utils"
@@ -12,11 +14,13 @@ import (
 	"strings"
 )
 
+type actorMap map[string]*models.Actor
+
 type ActorHandler struct {
 	DirPaths   *[]models.FilePath
 	NamesPath  *models.FilePath
 	CachedPath *models.FilePath
-	Actors     map[string]*models.Actor
+	Actors     actorMap
 	ToPath     *models.FilePath
 }
 
@@ -30,17 +34,28 @@ func (ah *ActorHandler) SaveActorsToDb(acts *[]models.Actor) {
 }
 
 func (ah *ActorHandler) FillActors() error {
-	ah.Actors = make(map[string]*models.Actor)
-	if err := ah.FillActorsFromDirs(); err != nil {
-		return err
-	}
+	ah.Actors = make(actorMap)
 
-	if err := ah.FillActorsFromFile(); err != nil {
-		return err
-	}
 
-	if err := ah.fillActorsFromCachedFile(); err != nil {
-		return err
+	err := ah.FillActorsFromDb()
+	if err != nil { return err }
+
+	//if err := ah.FillActorsFromDirs(); err != nil { return err }
+	//
+	//if err := ah.FillActorsFromFile(); err != nil { return err }
+	//
+	//if err := ah.fillActorsFromCachedFile(); err != nil { return err }
+
+
+	return nil
+}
+
+func (ah *ActorHandler) FillActorsFromDb() error {
+	acts, err := dbinteractors.AllActors()
+	if err != nil { return err }
+
+	for _, a := range *acts {
+		ah.Actors[a.FullName()] = &a
 	}
 
 	return nil
@@ -200,7 +215,7 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 		return models.Actor{}, errors.New("ActorNameInvalid")
 	}
 
-	_, _, err := models.CreateIfDoesNotExist(a)
+	_, _, err := models.CreateIfDoesNotExist(&a)
 	if err != nil {
 		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
 		return a, err
@@ -303,7 +318,7 @@ func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 	return &act, nil
 }
 
-func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.Movie) {
+func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.SysMovie) {
 	input = strings.ToLower(input)
 	nms := strings.Split(input, ",")
 	for _, n := range nms {

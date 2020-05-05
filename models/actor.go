@@ -20,7 +20,7 @@ type Actor struct {
 	LastName   string `json:"lastName" bson:"lastName"`
 }
 
-func (a Actor) FullName() string {
+func (a *Actor) FullName() string {
 	name := ""
 	if a.FirstName != "" {
 		name += a.FirstName
@@ -45,12 +45,12 @@ func (a Actor) FullName() string {
 	return strings.ToLower(name)
 }
 
-func (a Actor) GetIdentifier() string {
+func (a *Actor) GetIdentifier() string {
 	a.Identifier = a.FullName()
 	return a.Identifier
 }
 
-func (a Actor) IsIn(m *Movie) bool {
+func (a *Actor) IsIn(m *SysMovie) bool {
 	n := strings.ToLower(m.Name())
 	isIn := false
 	if a.FirstName != "" {
@@ -68,20 +68,20 @@ func (a Actor) IsIn(m *Movie) bool {
 	return isIn
 }
 
-func (a Actor) AsMap() map[string]interface{} {
+func (a *Actor) AsMap() map[string]interface{} {
 	return structs.Map(a)
 }
 
-func (a Actor) FormatName(name string) string {
+func (a *Actor) FormatName(name string) string {
 	return strings.ToLower(strings.Replace(name, " ", "_", -1))
 }
 
-func (a Actor) IsMatch(name string) bool {
+func (a *Actor) IsMatch(name string) bool {
 	fmtName := a.FormatName(name)
 	return strings.Contains(strings.ToLower(a.FullName()), fmtName)
 }
 
-func (a Actor) MatchPartial(pName string, np NamePart) bool {
+func (a *Actor) MatchPartial(pName string, np NamePart) bool {
 	match := true
 	name := ""
 
@@ -111,7 +111,7 @@ func (a Actor) MatchPartial(pName string, np NamePart) bool {
 	return match
 }
 
-func (a Actor) MatchWhole(frag string) bool {
+func (a *Actor) MatchWhole(frag string) bool {
 	n := a.FullName()
 	if len(frag) > len(n) {
 		return false
@@ -128,18 +128,18 @@ func (a Actor) MatchWhole(frag string) bool {
 	return match
 }
 
-func (a Actor) HasFirstMiddleLastName() bool {
+func (a *Actor) HasFirstMiddleLastName() bool {
 	return a.FirstName != "" && a.MiddleName != "" && a.LastName != ""
 }
 
-func (a Actor) HasFirstLastName() bool {
+func (a *Actor) HasFirstLastName() bool {
 	return a.FirstName != "" && a.LastName != ""
 }
 
-func (a Actor) HasFirstName() bool {
+func (a *Actor) HasFirstName() bool {
 	return a.FirstName != ""
 }
 
-func (a Actor) FullNameNoUnderscores() string {
+func (a *Actor) FullNameNoUnderscores() string {
 	return strings.ReplaceAll(a.FullName(), "_", "")
 }

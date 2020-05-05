@@ -58,7 +58,7 @@ func OrganizeRepeatNamesInDir(dirPath string) error {
 	return nil
 }
 
-func MoveMovie(m *models.Movie, ty MoveMovieType) error {
+func MoveMovie(m *models.SysMovie, ty MoveMovieType) error {
 	// FIXME: Think of a way to make this more efficient. This should not have to
 	// pull all the files in dirPath every time a movie is moved
 
@@ -122,7 +122,7 @@ func MoveMovies(fromDir string, toDir string) error {
 
 			f2.NewBasePath = np
 
-			m := models.Movie{File: f2}
+			m := models.SysMovie{File: f2}
 			m.GetNewName()
 
 			err = MoveMovie(&m, External)
@@ -146,7 +146,7 @@ func MoveMovies(fromDir string, toDir string) error {
 type NameUpdater struct {
 	DirPath  string
 	fh       FileHandler
-	movies   []models.Movie
+	movies   []models.SysMovie
 	isSorted bool
 }
 
@@ -158,11 +158,11 @@ func (nu *NameUpdater) FillMovies() error {
 		return err
 	}
 
-	mvs := make([]models.Movie, 0)
+	mvs := make([]models.SysMovie, 0)
 
 	for _, f := range nu.fh.Files {
 		if f.IsMovie() {
-			m := models.Movie{
+			m := models.SysMovie{
 				File:   f,
 				Actors: nil,
 			}
@@ -206,7 +206,7 @@ func (nu *NameUpdater) sortMovies() {
 	})
 }
 
-func (nu *NameUpdater) GetMovieNumber(m *models.Movie) (int, error) {
+func (nu *NameUpdater) GetMovieNumber(m *models.SysMovie) (int, error) {
 	if !m.IsRepeat() {
 		return -1, nil
 	}
@@ -241,7 +241,7 @@ func (nu *NameUpdater) GetMovieNumber(m *models.Movie) (int, error) {
 }
 
 // TODO: Move this logic to movie model
-func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.Movie, newNum int) (string, error) {
+func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.SysMovie, newNum int) (string, error) {
 	parts := strings.Split(m.NewNameOrName(), ".")
 	if len(parts) != 2 {
 		logger.Error("NameUpdater::UpdateMovieNameWithNumber movie is improper format:", m.NewNameOrName())
@@ -278,7 +278,7 @@ func (nu *NameUpdater) RenameMovies(replace bool) {
 	}
 }
 
-func (nu *NameUpdater) AddMovie(m *models.Movie) error {
+func (nu *NameUpdater) AddMovie(m *models.SysMovie) error {
 	on, err := nu.GetMovieNumber(m)
 	if err != nil {
 		return err
