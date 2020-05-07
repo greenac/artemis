@@ -97,7 +97,7 @@ func Update(m ModelDef,) (*mongo.UpdateResult, error)  {
 
 func Upsert(m ModelDef) (interface{}, error) {
 	id := m.GetId()
-	if id == "" {
+	if id.String() == "" {
 		mm, err := FindByIdentifier(m.GetIdentifier(), m.GetCollectionType())
 		if err != nil {
 			return nil, err
@@ -110,7 +110,7 @@ func Upsert(m ModelDef) (interface{}, error) {
 		return Update(m)
 	}
 
-	mb, err := FindById(id, db.MovieCollection)
+	mb, err := FindById(id.String(), db.MovieCollection)
 	if err != nil {
 		return nil, err
 	}

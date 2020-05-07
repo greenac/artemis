@@ -2,25 +2,28 @@ package models
 
 import (
 	"github.com/greenac/artemis/db"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IdentifierFilter map[string]string
 
 type ModelDef interface {
-	GetId() string
+	GetId() primitive.ObjectID
 	GetIdentifier() string
 	IdentifierFilter() IdentifierFilter
 	GetCollectionType() db.CollectionType
 }
 
 type Model struct {
-	Id         string            `json:"id" bson:"id"`
 	Identifier string            `json:"identifier" bson:"identifier"`
 	ColType    db.CollectionType `json:"collectionType" bson:"collectionType"`
 }
 
-func (m *Model) GetId() string {
-	return m.Id
+func (m *Model) GetId() primitive.ObjectID {
+	// This method should return the struct that has nested `Model`
+	// when it implements `GetId`
+	id, _ := primitive.ObjectIDFromHex("0")
+	return id
 }
 
 func (m *Model) GetIdentifier() string {

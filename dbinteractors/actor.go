@@ -20,8 +20,11 @@ func AllActors() (*[]models.Actor, error) {
 	acts := make([]models.Actor, 0)
 
 	defer cur.Close(cAndT.Ctx)
+
 	for cur.Next(cAndT.Ctx) {
+
 		var a models.Actor
+		//var r bson.M
 		err := cur.Decode(&a)
 		if err != nil {
 			logger.Warn("AllActors failed to decode actor with error:", err)

@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/fatih/structs"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strings"
 )
 
@@ -14,10 +15,15 @@ const (
 )
 
 type Actor struct {
-	Model
+	Id         primitive.ObjectID  `json:"id,omitempty" bson:"_id"`
 	FirstName  string `json:"firstName" bson:"firstName"`
 	MiddleName string `json:"middleName" bson:"middleName"`
 	LastName   string `json:"lastName" bson:"lastName"`
+	Model
+}
+
+func (a *Actor) GetId() primitive.ObjectID {
+	return a.Id
 }
 
 func (a *Actor) FullName() string {

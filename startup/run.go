@@ -21,6 +21,7 @@ const (
 	OrganizeStagingDir ArtemisRunType = "ORGANIZE_STAGING_DIR"
 	WriteNames         ArtemisRunType = "WRITE_NAMES_TO_FILE"
 	Server             ArtemisRunType = "SERVER"
+	Test ArtemisRunType = "TEST"
 )
 
 func RenameMovies(ac *config.ArtemisConfig) {
@@ -57,7 +58,6 @@ func OrganizeStagingDirectory(ac *config.ArtemisConfig) {
 }
 
 func WriteNamesToFile(ac *config.ArtemisConfig) {
-	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
 	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
 	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
 
@@ -69,17 +69,9 @@ func WriteNamesToFile(ac *config.ArtemisConfig) {
 		actorPaths[i] = models.FilePath{Path: p}
 	}
 
-	ah := handlers.ActorHandler{
-		DirPaths:  &actorPaths,
-		NamesPath: &actNameFile,
-	}
+	ah := handlers.ActorHandler{}
 
 	err := ah.FillActors()
-	if err != nil {
-		panic(err)
-	}
-
-	err = ah.WriteActorsToFile()
 	if err != nil {
 		panic(err)
 	}
@@ -122,4 +114,18 @@ func RunServer(ac *config.ArtemisConfig) {
 	http.HandleFunc("/api/all-actors", api.AllActors)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", ac.Url, ac.Port), nil))
+}
+
+func TestRun(ac *config.ArtemisConfig) {
+	db.SetupMongo(&ac.Mongo)
+
+	ah := handlers.ActorHandler{}
+	err := ah.FillActors()
+	if err != nil {
+		logger.Error("getting actors", err)
+	}
+
+	for _, a := range *ah.SortedActors() {
+		logger.Error("in test run", a)
+	}
 }

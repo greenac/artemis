@@ -59,6 +59,8 @@ func main() {
 		startup.WriteNamesToFile(&ac)
 	case startup.Server:
 		startup.RunServer(&ac)
+	case startup.Test:
+		startup.TestRun(&ac)
 	default:
 		logger.Error("Unknown run type:", rt)
 		panic(artemiserror.New(artemiserror.InvalidParameter))

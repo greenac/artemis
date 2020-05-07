@@ -19,12 +19,7 @@ func (ah *ArtemisHandler) Setup(
 	toPath *models.FilePath,
 ) error {
 	if ah.ActorHandler == nil {
-		actHand := ActorHandler{
-			DirPaths:   actorDirPaths,
-			NamesPath:  actorFilePath,
-			CachedPath: cachedNamePath,
-			ToPath:     toPath,
-		}
+		actHand := ActorHandler{}
 		err := actHand.FillActors()
 		if err != nil {
 			logger.Error("`ArtemisHandler::Setup` getting actors", err)
@@ -59,8 +54,8 @@ func (ah *ArtemisHandler) Sort() {
 
 		for _, a := range ah.ActorHandler.Actors {
 			if a.IsIn(&m) {
-				m.AddActor(*a)
-				m.UpdateNewName(a)
+				m.AddActor(a)
+				m.UpdateNewName(&a)
 			}
 		}
 
