@@ -1,11 +1,13 @@
 package dbinteractors
 
 import (
+	"fmt"
 	"github.com/greenac/artemis/db"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"gopkg.in/mgo.v2/bson"
+	"strings"
 )
 
 func AllActors() (*[]models.Actor, error) {
@@ -25,9 +27,8 @@ func AllActors() (*[]models.Actor, error) {
 	defer cur.Close(cAndT.Ctx)
 
 	for cur.Next(cAndT.Ctx) {
-
 		var a models.Actor
-		//var r bson.M
+
 		err := cur.Decode(&a)
 		if err != nil {
 			logger.Warn("AllActors failed to decode actor with error:", err)
@@ -86,4 +87,147 @@ func GetActorByIdentifier(id string) (*models.Actor, error) {
 	}
 
 	return &a, nil
+}
+
+func GetActorsForInput(input string) (*[]models.Actor, error) {
+	acts := make([]models.Actor, 0)
+	if input == "" {
+		return &acts, nil
+	}
+
+	var filter interface{}
+
+	nms := strings.Split(input, " ")
+
+	switch len(nms) {
+	case 1:
+		filter = bson.D{
+			bson.E{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+		}
+	case 2:
+		filter = bson.D{
+			{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "$or",
+				Value: bson.A{
+					bson.D{
+						{
+							Key: "middleName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[1]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+					bson.D{
+						{
+							Key: "lastName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[1]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	default:
+		filter = bson.D{
+			{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "middleName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[1]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "lastName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[2]),
+							Options: "i",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, filter)
+	if err != nil {
+		logger.Error("GetActorsForInput::Failed with error:", err)
+		return nil, err
+	}
+
+	defer cur.Close(cAndT.Ctx)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("GetActorsForInput::Failed to decode actor with error:", err)
+			continue
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
 }

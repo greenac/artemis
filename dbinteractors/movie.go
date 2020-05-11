@@ -69,9 +69,9 @@ func UnknownMovies() (*[]models.Movie, error) {
 		return nil, err
 	}
 
-	q := map[string]interface{}{"$not": map[string]interface{}{"$size": 0}}
+	q := map[string]interface{}{"$size": 0}
 
-	c, err := cAndT.Col.Find(cAndT.Ctx, bson.M{"movieIds": q})
+	c, err := cAndT.Col.Find(cAndT.Ctx, bson.M{"actorIds": q})
 	if err != nil {
 		logger.Error("UnknownMovies::Failed to find unknown movies:", err)
 		return nil, err
@@ -85,7 +85,7 @@ func UnknownMovies() (*[]models.Movie, error) {
 		var m models.Movie
 		err := c.Decode(&m)
 		if err != nil {
-			logger.Warn("UnkownMovies::failed to decode movie with error:", err)
+			logger.Warn("UnknownMovies::Failed to decode movie with error:", err)
 			continue
 		}
 
