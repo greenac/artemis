@@ -2,43 +2,20 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/greenac/artemis/db"
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"go.mongodb.org/mongo-driver/bson"
 	"net/http"
+	"strings"
 )
 
 func AllActors(w http.ResponseWriter, r *http.Request) {
 	logger.Log("Getting all actors...")
 
-	colNCtx, err := db.GetCollectionAndContext(db.ActorCollection)
+	acts, err := dbinteractors.AllActors()
 	if err != nil {
-		logger.Error("allActors::Failed to get mongo actor collection")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}
-
-	cur, err := colNCtx.Col.Find(colNCtx.Ctx, bson.D{})
-	if err != nil {
-		logger.Warn("allActors::Failed to grab all actors", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	acts := make([]*models.Actor, 0)
-
-	defer cur.Close(colNCtx.Ctx)
-
-	for cur.Next(colNCtx.Ctx) {
-		var a models.Actor
-		err := cur.Decode(&a)
-		if err != nil {
-			logger.Warn("allActors::Failed to decode model with error", err)
-			continue
-		}
-
-		acts = append(acts, &a)
 	}
 
 	err = json.NewEncoder(w).Encode(acts)
@@ -46,4 +23,34 @@ func AllActors(w http.ResponseWriter, r *http.Request) {
 		logger.Error("allActors::Failed to encode actor json", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func ActorsMatchingInput(w http.ResponseWriter, r *http.Request) {
+	logger.Log("ActorsMatchingInput::", r.URL.Query())
+
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("ActorsMatchingInput::query string has incorrect params:", qry)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	logger.Log("getting from query:", qry.Get("q"))
+
+	acts, err := dbinteractors.GetActorsForInput(
+		strings.Trim(qry.Get("q"), " "),
+	)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(map[string]*[]models.Actor{"actors": acts})
+	if err != nil {
+		logger.Error("ActorsForInput::Failed to encode actor json", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 }
