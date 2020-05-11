@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 )
@@ -8,16 +9,9 @@ import (
 type ArtemisHandler struct {
 	MovieHandler *MovieHandler
 	ActorHandler *ActorHandler
-	ToPath       *models.FilePath
 }
 
-func (ah *ArtemisHandler) Setup(
-	movieDirPaths *[]models.FilePath,
-	actorDirPaths *[]models.FilePath,
-	actorFilePath *models.FilePath,
-	cachedNamePath *models.FilePath,
-	toPath *models.FilePath,
-) error {
+func (ah *ArtemisHandler) Setup(movieDirPaths *[]models.FilePath) error {
 	if ah.ActorHandler == nil {
 		actHand := ActorHandler{}
 		err := actHand.FillActors()
@@ -29,21 +23,15 @@ func (ah *ArtemisHandler) Setup(
 	}
 
 	if ah.MovieHandler == nil {
-		mh := MovieHandler{DirPaths: movieDirPaths, NewToPath: ah.ToPath}
-		err := mh.CleanseInitialNames()
-		if err != nil {
-			return err
-		}
+		mh := MovieHandler{DirPaths: movieDirPaths}
 
-		err = mh.SetMovies()
+		err := mh.SetMovies()
 		if err != nil {
 			return err
 		}
 
 		ah.MovieHandler = &mh
 	}
-
-	ah.ToPath = toPath
 
 	return nil
 }
@@ -52,26 +40,33 @@ func (ah *ArtemisHandler) Sort() {
 	for _, m := range ah.MovieHandler.Movies {
 		m.GetNewName()
 
-		for _, a := range ah.ActorHandler.Actors {
-			if a.IsIn(&m) {
-				m.AddActor(a)
-				m.UpdateNewName(&a)
+		mm := dbinteractors.NewMovie(m.Name(), m.Path())
+		ex, err := dbinteractors.DoesMovieExist(mm.GetIdentifier())
+		if err != nil {
+			ex = false
+		}
+
+		if !ex {
+			_, err = mm.Create()
+			if err != nil {
+				continue
 			}
 		}
 
-		if m.IsKnown() {
-			ah.MovieHandler.AddKnownMovie(m)
-		} else {
-			ah.MovieHandler.AddUnknownMovie(m)
+		save := false
+		for _, a := range ah.ActorHandler.Actors {
+			if a.IsIn(m.Name()) {
+				logger.Log("Movie:", m.Name(), "has actor:", a.FullName())
+				save = true
+				mm.AddActor(a.Id)
+				a.AddMovie(mm.Id)
+				_ = a.Save()
+			}
+		}
+
+		if save {
+			logger.Debug("Would save movie", mm.Name, mm.GetIdentifier())
+			_ = mm.Save()
 		}
 	}
-}
-
-func (ah *ArtemisHandler) RenameMovies() {
-	ah.MovieHandler.AddKnownMovieNames()
-	ah.MovieHandler.AddUnknownMovieNames()
-}
-
-func (ah *ArtemisHandler) MoveMovies() {
-	ah.MovieHandler.MoveMovies(ah.ToPath.PathAsString())
 }

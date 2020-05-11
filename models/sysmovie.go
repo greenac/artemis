@@ -18,16 +18,10 @@ const (
 var repeatMovieFrags = []MovieRepeatType{RepeatTypeScene, RepeatType720}
 
 type SysMovie struct {
-	Model
 	File
 	Actors       []*Actor
 	RepeatType   MovieRepeatType
 	RepeatNumber int
-}
-
-func (m SysMovie) GetIdentifier() string {
-	m.Identifier = m.GetNewName()
-	return m.Identifier
 }
 
 func (m SysMovie) AddActor(a Actor) {

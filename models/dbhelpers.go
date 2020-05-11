@@ -4,28 +4,32 @@ import (
 	"github.com/greenac/artemis/db"
 	"github.com/greenac/artemis/logger"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-
-func Create(m ModelDef) (interface{}, error) {
+func Create(m ModelDef) (*primitive.ObjectID, error) {
 	cAndT, err := db.GetCollectionAndContext(m.GetCollectionType())
 	if err != nil {
+		logger.Debug("Failed to get collection and context with error:", err)
 		return nil, err
 	}
 
-	m.GetIdentifier()
+	m.SetIdentifier()
 
 	res, err := cAndT.Col.InsertOne(cAndT.Ctx, m)
-
 	if err != nil {
+		logger.Error("Create::Failed to insert model:", m, "with error", err)
 		return nil, err
 	}
 
-	return res.InsertedID, nil
+	id := res.InsertedID.(primitive.ObjectID)
+
+	return &id, nil
 }
 
-func CreateIfDoesNotExist(m ModelDef) (bool, interface{}, error) {
+func CreateIfDoesNotExist(m ModelDef) (bool, *primitive.ObjectID, error) {
 	cAndT, err := db.GetCollectionAndContext(m.GetCollectionType())
 	if err != nil {
 		return false, nil, err
@@ -48,43 +52,34 @@ func CreateIfDoesNotExist(m ModelDef) (bool, interface{}, error) {
 func FindByIdentifier(
 	identifier string,
 	ct db.CollectionType,
-) (bson.M, error) {
+) (*mongo.SingleResult, error) {
 	cAndT, err := db.GetCollectionAndContext(ct)
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 
-	var m bson.M
-	err = cAndT.Col.FindOne(cAndT.Ctx, bson.D{{"identifier", identifier}}).Decode(&m)
-	if err != nil {
-		logger.Error("FindByIdentifier::could not retrieve identifier:", identifier, "from collection:", ct)
-	}
-
-	return m,  err
+	return cAndT.Col.FindOne(
+		cAndT.Ctx,
+		bson.D{{"identifier", identifier}},
+	), nil
 }
 
 func FindById(
-	id string,
+	id primitive.ObjectID,
 	ct db.CollectionType,
-) (bson.M, error) {
+) (*mongo.SingleResult, error) {
 	cAndT, err := db.GetCollectionAndContext(ct)
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 
-	var m bson.M
-	err = cAndT.Col.FindOne(cAndT.Ctx, bson.D{{"_id", id}}).Decode(&m)
-	if err != nil {
-		logger.Error("FindById::could not retrieve _id:", id, "from collection:", ct)
-	}
-
-	return m,  err
+	return cAndT.Col.FindOne(cAndT.Ctx, bson.D{{"_id", id}}), nil
 }
 
-func Update(m ModelDef,) (*mongo.UpdateResult, error)  {
+func Update(m ModelDef) (*primitive.ObjectID, error) {
 	cAndT, err := db.GetCollectionAndContext(m.GetCollectionType())
 	if err != nil {
-		return  nil, err
+		return nil, err
 	}
 
 	res, err := cAndT.Col.UpdateOne(cAndT.Ctx, m.IdentifierFilter(), m)
@@ -92,37 +87,56 @@ func Update(m ModelDef,) (*mongo.UpdateResult, error)  {
 		logger.Error("Update::failed to update", m, "with error:", err)
 	}
 
-	return res, err
+	id := res.UpsertedID.(primitive.ObjectID)
+
+	return &id, err
 }
 
-func Upsert(m ModelDef) (interface{}, error) {
+func Upsert(m ModelDef) (*primitive.ObjectID, error) {
 	id := m.GetId()
 	if id.String() == "" {
-		mm, err := FindByIdentifier(m.GetIdentifier(), m.GetCollectionType())
+		res, err := FindByIdentifier(m.GetIdentifier(), m.GetCollectionType())
 		if err != nil {
 			return nil, err
 		}
 
-		if mm == nil {
+		var r interface{}
+
+		err = res.Decode(r)
+		if err != nil {
 			return Create(m)
 		}
 
 		return Update(m)
 	}
 
-	mb, err := FindById(id.String(), db.MovieCollection)
+	res, err := FindById(id, db.MovieCollection)
 	if err != nil {
 		return nil, err
 	}
 
-	if mb == nil {
+	var r interface{}
+
+	err = res.Decode(r)
+	if err != nil {
 		return Create(m)
 	}
 
-	res, err := Update(m)
+	return Upsert(m)
+}
+
+func Save(m ModelDef) error {
+	cAndT, err := db.GetCollectionAndContext(m.GetCollectionType())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return res.UpsertedID, nil
+	opts := options.FindOneAndUpdate().SetUpsert(true)
+	res := cAndT.Col.FindOneAndUpdate(cAndT.Ctx, m.IdFilter(), bson.M{"$set": m}, opts)
+	if res.Err() != nil {
+		logger.Error("Save::failed to save model def:", m, "error", res.Err())
+		return res.Err()
+	}
+
+	return nil
 }

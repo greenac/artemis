@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/config"
+	"github.com/greenac/artemis/db"
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/utils"
+	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -303,6 +307,64 @@ func (nu *NameUpdater) AddMovie(m *models.SysMovie) error {
 	}
 
 	nu.movies = append(nu.movies, *m)
+
+	return nil
+}
+
+func MoveDirAndUpdateMovies(from string, to string, config *config.MongoConfig) error {
+	db.SetupMongo(config)
+
+	toPath := models.FilePath{Path: to}
+	fromPath := models.FilePath{Path: from}
+
+	dirName := fromPath.FileName()
+
+	isDir, _ := toPath.IsDir()
+	if !isDir {
+		logger.Error("MoveDir::To path:", to, "is not a dir")
+		return artemiserror.New(artemiserror.PathNotSet)
+	}
+
+	mh := MovieHandler{DirPaths: &([]models.FilePath{fromPath})}
+	err := mh.SetMovies()
+	if err != nil {
+		return err
+	}
+
+	mvs := make([]models.Movie, 0)
+
+	for _, m := range mh.Movies {
+		id := models.MovieIdentifier(m.Path())
+		logger.Debug("Got id:", id, "for path:", m.Path())
+		dm, err := dbinteractors.GetMovieByIdentifier(id)
+		if err != nil {
+			continue
+		}
+
+		mvs = append(mvs, *dm)
+	}
+
+	toDirPath := path.Join(to, dirName)
+	err = os.Rename(from, toDirPath)
+	if err != nil {
+		logger.Error("MoveDir::Failed to move dir from:", from, "to", to, "error", err)
+		return err
+	}
+
+	for _, m := range mvs {
+		np := path.Join(toDirPath, m.Name)
+		id := models.MovieIdentifier(np)
+
+		m.Path = np
+		m.Identifier = id
+
+		logger.Log("Updating movie identifier to:", id, "path:", np)
+
+		err = m.Save()
+		if err != nil {
+			logger.Warn("DirMover::FillMovies could not update identifier:", id, "for movie:", m.Name)
+		}
+	}
 
 	return nil
 }

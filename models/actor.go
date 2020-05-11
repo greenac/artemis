@@ -1,7 +1,12 @@
 package models
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/fatih/structs"
+	"github.com/greenac/artemis/db"
+	"github.com/greenac/artemis/logger"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strings"
 )
@@ -15,18 +20,66 @@ const (
 )
 
 type Actor struct {
-	Id         primitive.ObjectID  `json:"id,omitempty" bson:"_id"`
-	FirstName  string `json:"firstName" bson:"firstName"`
-	MiddleName string `json:"middleName" bson:"middleName"`
-	LastName   string `json:"lastName" bson:"lastName"`
-	Model
+	Id         primitive.ObjectID   `json:"id,omitempty" bson:"_id,omitempty"`
+	Identifier string               `json:"identifier" bson:"identifier"`
+	FirstName  string               `json:"firstName" bson:"firstName"`
+	MiddleName string               `json:"middleName" bson:"middleName"`
+	LastName   string               `json:"lastName" bson:"lastName"`
+	MovieIds   []primitive.ObjectID `json:"movieIds" bson:"movieIds"`
 }
 
-func (a *Actor) GetId() primitive.ObjectID {
+// Model Interface methods
+func (a Actor) GetId() primitive.ObjectID {
 	return a.Id
 }
 
-func (a *Actor) FullName() string {
+func (a Actor) IdFilter() bson.M {
+	return bson.M{"_id": a.Id}
+}
+
+func (a Actor) IdentifierFilter() bson.M {
+	return bson.M{"identifier": a.Identifier}
+}
+
+func (a Actor) GetIdentifier() string {
+	if a.Identifier == "" {
+		a.SetIdentifier()
+	}
+
+	return a.Identifier
+}
+
+func (a Actor) SetIdentifier() string {
+	a.Identifier = fmt.Sprintf("%x", md5.Sum([]byte(a.FullName())))
+
+	return a.Identifier
+}
+
+func (a Actor) GetCollectionType() db.CollectionType {
+	return db.ActorCollection
+}
+
+func (a Actor) Save() error {
+	return Save(a)
+}
+
+func (a Actor) Upsert() (*primitive.ObjectID, error) {
+	return Upsert(a)
+}
+
+func (a Actor) Create() (*primitive.ObjectID, error) {
+	id, err := Create(a)
+	if err != nil {
+		return nil, err
+	}
+
+	a.Id = *id
+
+	return id, nil
+}
+
+// Class methods
+func (a Actor) FullName() string {
 	name := ""
 	if a.FirstName != "" {
 		name += a.FirstName
@@ -51,13 +104,8 @@ func (a *Actor) FullName() string {
 	return strings.ToLower(name)
 }
 
-func (a *Actor) GetIdentifier() string {
-	a.Identifier = a.FullName()
-	return a.Identifier
-}
-
-func (a *Actor) IsIn(m *SysMovie) bool {
-	n := strings.ToLower(m.Name())
+func (a Actor) IsIn(name string) bool {
+	n := strings.ToLower(name)
 	isIn := false
 	if a.FirstName != "" {
 		isIn = strings.Contains(n, a.FirstName)
@@ -74,20 +122,20 @@ func (a *Actor) IsIn(m *SysMovie) bool {
 	return isIn
 }
 
-func (a *Actor) AsMap() map[string]interface{} {
+func (a Actor) AsMap() map[string]interface{} {
 	return structs.Map(a)
 }
 
-func (a *Actor) FormatName(name string) string {
+func (a Actor) FormatName(name string) string {
 	return strings.ToLower(strings.Replace(name, " ", "_", -1))
 }
 
-func (a *Actor) IsMatch(name string) bool {
+func (a Actor) IsMatch(name string) bool {
 	fmtName := a.FormatName(name)
 	return strings.Contains(strings.ToLower(a.FullName()), fmtName)
 }
 
-func (a *Actor) MatchPartial(pName string, np NamePart) bool {
+func (a Actor) MatchPartial(pName string, np NamePart) bool {
 	match := true
 	name := ""
 
@@ -117,7 +165,7 @@ func (a *Actor) MatchPartial(pName string, np NamePart) bool {
 	return match
 }
 
-func (a *Actor) MatchWhole(frag string) bool {
+func (a Actor) MatchWhole(frag string) bool {
 	n := a.FullName()
 	if len(frag) > len(n) {
 		return false
@@ -134,18 +182,32 @@ func (a *Actor) MatchWhole(frag string) bool {
 	return match
 }
 
-func (a *Actor) HasFirstMiddleLastName() bool {
+func (a Actor) HasFirstMiddleLastName() bool {
 	return a.FirstName != "" && a.MiddleName != "" && a.LastName != ""
 }
 
-func (a *Actor) HasFirstLastName() bool {
+func (a Actor) HasFirstLastName() bool {
 	return a.FirstName != "" && a.LastName != ""
 }
 
-func (a *Actor) HasFirstName() bool {
+func (a Actor) HasFirstName() bool {
 	return a.FirstName != ""
 }
 
-func (a *Actor) FullNameNoUnderscores() string {
+func (a Actor) FullNameNoUnderscores() string {
 	return strings.ReplaceAll(a.FullName(), "_", "")
+}
+
+func (a Actor) AddMovie(id primitive.ObjectID) bool {
+	for _, mid := range a.MovieIds {
+		if mid == id {
+			return false
+		}
+	}
+
+	logger.Debug("Actor:", a.FullName(), "Adding movie:", id)
+
+	a.MovieIds = append(a.MovieIds, id)
+
+	return true
 }

@@ -13,7 +13,8 @@ import (
 type actorMap map[string]models.Actor
 
 type ActorHandler struct {
-	Actors     actorMap
+	Actors    actorMap
+	NamesPath *models.FilePath
 }
 
 func (ah *ActorHandler) SaveActorsToDb(acts *[]models.Actor) {
@@ -29,7 +30,9 @@ func (ah *ActorHandler) FillActors() error {
 	ah.Actors = make(actorMap)
 
 	err := ah.FillActorsFromDb()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	//if err := ah.FillActorsFromDirs(); err != nil { return err }
 	//
@@ -37,13 +40,14 @@ func (ah *ActorHandler) FillActors() error {
 	//
 	//if err := ah.fillActorsFromCachedFile(); err != nil { return err }
 
-
 	return nil
 }
 
 func (ah *ActorHandler) FillActorsFromDb() error {
 	acts, err := dbinteractors.AllActors()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	for _, a := range *acts {
 		ah.Actors[a.FullName()] = a
@@ -52,6 +56,31 @@ func (ah *ActorHandler) FillActorsFromDb() error {
 	return nil
 }
 
+func (ah *ActorHandler) FillActorsFromFile() error {
+	if ah.NamesPath == nil {
+		logger.Error("ActorHandler::FillActorsFromFile Cannot fill actors from file. FilePath not initialized")
+		return artemiserror.New(artemiserror.ArgsNotInitialized)
+	}
+
+	fh := FileHandler{BasePath: *ah.NamesPath}
+	names, err := fh.ReadNameFile(ah.NamesPath)
+	if err != nil {
+		logger.Error("Cannot read name file at path:", ah.NamesPath.PathAsString(), "error:", err)
+		return err
+	}
+
+	for _, n := range *names {
+		a, err := ah.CreateActor(string(n))
+		if err != nil {
+			logger.Warn("`ActorHandler::FillActorsFromFiles` could not create actor from name:", string(n), err)
+			continue
+		}
+
+		ah.Actors[a.FullName()] = a
+	}
+
+	return nil
+}
 
 func (ah *ActorHandler) SortedActors() *[]models.Actor {
 	acts := make([]models.Actor, len(ah.Actors))
@@ -93,11 +122,13 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 		return models.Actor{}, errors.New("ActorNameInvalid")
 	}
 
-	_, _, err := models.CreateIfDoesNotExist(&a)
+	_, err := a.Create()
 	if err != nil {
 		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
 		return a, err
 	}
+
+	logger.Debug("Created actor:", a, a.Id)
 
 	return a, nil
 }
@@ -189,7 +220,9 @@ func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 	ah.Actors[name] = act
 
 	_, _, err = models.CreateIfDoesNotExist(&act)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	return &act, nil
 }
