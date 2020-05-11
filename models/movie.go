@@ -34,17 +34,17 @@ type Movie struct {
 	Actors     *[]*Actor            `json:"actors" bson:"-"`
 }
 
-func (m Movie) GetId() primitive.ObjectID {
+func (m *Movie) GetId() primitive.ObjectID {
 	return m.Id
 }
 
-func (m Movie) SetIdentifier() string {
+func (m *Movie) SetIdentifier() string {
 	m.Identifier = MovieIdentifier(m.Path)
 
 	return m.Identifier
 }
 
-func (m Movie) GetIdentifier() string {
+func (m *Movie) GetIdentifier() string {
 	if m.Identifier == "" {
 		m.SetIdentifier()
 	}
@@ -52,19 +52,19 @@ func (m Movie) GetIdentifier() string {
 	return m.Identifier
 }
 
-func (m Movie) IdFilter() bson.M {
+func (m *Movie) IdFilter() bson.M {
 	return bson.M{"_id": m.Id}
 }
 
-func (m Movie) IdentifierFilter() bson.M {
+func (m *Movie) IdentifierFilter() bson.M {
 	return bson.M{"identifier": m.Identifier}
 }
 
-func (m Movie) GetCollectionType() db.CollectionType {
+func (m *Movie) GetCollectionType() db.CollectionType {
 	return db.MovieCollection
 }
 
-func (m Movie) Create() (*primitive.ObjectID, error) {
+func (m *Movie) Create() (*primitive.ObjectID, error) {
 	id, err := Create(m)
 	if err != nil {
 		return nil, err
@@ -75,15 +75,15 @@ func (m Movie) Create() (*primitive.ObjectID, error) {
 	return id, nil
 }
 
-func (m Movie) Upsert() (*primitive.ObjectID, error) {
+func (m *Movie) Upsert() (*primitive.ObjectID, error) {
 	return Upsert(m)
 }
 
-func (m Movie) Save() error {
+func (m *Movie) Save() error {
 	return Save(m)
 }
 
-func (m Movie) AddActor(actorId primitive.ObjectID) bool {
+func (m *Movie) AddActor(actorId primitive.ObjectID) bool {
 	for _, aID := range m.ActorIds {
 		if actorId == aID {
 			return false

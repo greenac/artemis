@@ -29,19 +29,19 @@ type Actor struct {
 }
 
 // Model Interface methods
-func (a Actor) GetId() primitive.ObjectID {
+func (a *Actor) GetId() primitive.ObjectID {
 	return a.Id
 }
 
-func (a Actor) IdFilter() bson.M {
+func (a *Actor) IdFilter() bson.M {
 	return bson.M{"_id": a.Id}
 }
 
-func (a Actor) IdentifierFilter() bson.M {
+func (a *Actor) IdentifierFilter() bson.M {
 	return bson.M{"identifier": a.Identifier}
 }
 
-func (a Actor) GetIdentifier() string {
+func (a *Actor) GetIdentifier() string {
 	if a.Identifier == "" {
 		a.SetIdentifier()
 	}
@@ -49,25 +49,25 @@ func (a Actor) GetIdentifier() string {
 	return a.Identifier
 }
 
-func (a Actor) SetIdentifier() string {
+func (a *Actor) SetIdentifier() string {
 	a.Identifier = fmt.Sprintf("%x", md5.Sum([]byte(a.FullName())))
 
 	return a.Identifier
 }
 
-func (a Actor) GetCollectionType() db.CollectionType {
+func (a *Actor) GetCollectionType() db.CollectionType {
 	return db.ActorCollection
 }
 
-func (a Actor) Save() error {
+func (a *Actor) Save() error {
 	return Save(a)
 }
 
-func (a Actor) Upsert() (*primitive.ObjectID, error) {
+func (a *Actor) Upsert() (*primitive.ObjectID, error) {
 	return Upsert(a)
 }
 
-func (a Actor) Create() (*primitive.ObjectID, error) {
+func (a *Actor) Create() (*primitive.ObjectID, error) {
 	id, err := Create(a)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func (a Actor) Create() (*primitive.ObjectID, error) {
 }
 
 // Class methods
-func (a Actor) FullName() string {
+func (a *Actor) FullName() string {
 	name := ""
 	if a.FirstName != "" {
 		name += a.FirstName
@@ -104,7 +104,7 @@ func (a Actor) FullName() string {
 	return strings.ToLower(name)
 }
 
-func (a Actor) IsIn(name string) bool {
+func (a *Actor) IsIn(name string) bool {
 	n := strings.ToLower(name)
 	isIn := false
 	if a.FirstName != "" {
@@ -122,20 +122,20 @@ func (a Actor) IsIn(name string) bool {
 	return isIn
 }
 
-func (a Actor) AsMap() map[string]interface{} {
+func (a *Actor) AsMap() map[string]interface{} {
 	return structs.Map(a)
 }
 
-func (a Actor) FormatName(name string) string {
+func (a *Actor) FormatName(name string) string {
 	return strings.ToLower(strings.Replace(name, " ", "_", -1))
 }
 
-func (a Actor) IsMatch(name string) bool {
+func (a *Actor) IsMatch(name string) bool {
 	fmtName := a.FormatName(name)
 	return strings.Contains(strings.ToLower(a.FullName()), fmtName)
 }
 
-func (a Actor) MatchPartial(pName string, np NamePart) bool {
+func (a *Actor) MatchPartial(pName string, np NamePart) bool {
 	match := true
 	name := ""
 
@@ -165,7 +165,7 @@ func (a Actor) MatchPartial(pName string, np NamePart) bool {
 	return match
 }
 
-func (a Actor) MatchWhole(frag string) bool {
+func (a *Actor) MatchWhole(frag string) bool {
 	n := a.FullName()
 	if len(frag) > len(n) {
 		return false
@@ -182,23 +182,23 @@ func (a Actor) MatchWhole(frag string) bool {
 	return match
 }
 
-func (a Actor) HasFirstMiddleLastName() bool {
+func (a *Actor) HasFirstMiddleLastName() bool {
 	return a.FirstName != "" && a.MiddleName != "" && a.LastName != ""
 }
 
-func (a Actor) HasFirstLastName() bool {
+func (a *Actor) HasFirstLastName() bool {
 	return a.FirstName != "" && a.LastName != ""
 }
 
-func (a Actor) HasFirstName() bool {
+func (a *Actor) HasFirstName() bool {
 	return a.FirstName != ""
 }
 
-func (a Actor) FullNameNoUnderscores() string {
+func (a *Actor) FullNameNoUnderscores() string {
 	return strings.ReplaceAll(a.FullName(), "_", "")
 }
 
-func (a Actor) AddMovie(id primitive.ObjectID) bool {
+func (a *Actor) AddMovie(id primitive.ObjectID) bool {
 	for _, mid := range a.MovieIds {
 		if mid == id {
 			return false
