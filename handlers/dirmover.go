@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/config"
+	"github.com/greenac/artemis/db"
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/utils"
+	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -58,7 +62,7 @@ func OrganizeRepeatNamesInDir(dirPath string) error {
 	return nil
 }
 
-func MoveMovie(m *models.Movie, ty MoveMovieType) error {
+func MoveMovie(m *models.SysMovie, ty MoveMovieType) error {
 	// FIXME: Think of a way to make this more efficient. This should not have to
 	// pull all the files in dirPath every time a movie is moved
 
@@ -122,7 +126,7 @@ func MoveMovies(fromDir string, toDir string) error {
 
 			f2.NewBasePath = np
 
-			m := models.Movie{File: f2}
+			m := models.SysMovie{File: f2}
 			m.GetNewName()
 
 			err = MoveMovie(&m, External)
@@ -146,7 +150,7 @@ func MoveMovies(fromDir string, toDir string) error {
 type NameUpdater struct {
 	DirPath  string
 	fh       FileHandler
-	movies   []models.Movie
+	movies   []models.SysMovie
 	isSorted bool
 }
 
@@ -158,11 +162,11 @@ func (nu *NameUpdater) FillMovies() error {
 		return err
 	}
 
-	mvs := make([]models.Movie, 0)
+	mvs := make([]models.SysMovie, 0)
 
 	for _, f := range nu.fh.Files {
 		if f.IsMovie() {
-			m := models.Movie{
+			m := models.SysMovie{
 				File:   f,
 				Actors: nil,
 			}
@@ -206,7 +210,7 @@ func (nu *NameUpdater) sortMovies() {
 	})
 }
 
-func (nu *NameUpdater) GetMovieNumber(m *models.Movie) (int, error) {
+func (nu *NameUpdater) GetMovieNumber(m *models.SysMovie) (int, error) {
 	if !m.IsRepeat() {
 		return -1, nil
 	}
@@ -241,7 +245,7 @@ func (nu *NameUpdater) GetMovieNumber(m *models.Movie) (int, error) {
 }
 
 // TODO: Move this logic to movie model
-func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.Movie, newNum int) (string, error) {
+func (nu *NameUpdater) UpdateMovieNameWithNumber(m *models.SysMovie, newNum int) (string, error) {
 	parts := strings.Split(m.NewNameOrName(), ".")
 	if len(parts) != 2 {
 		logger.Error("NameUpdater::UpdateMovieNameWithNumber movie is improper format:", m.NewNameOrName())
@@ -278,7 +282,7 @@ func (nu *NameUpdater) RenameMovies(replace bool) {
 	}
 }
 
-func (nu *NameUpdater) AddMovie(m *models.Movie) error {
+func (nu *NameUpdater) AddMovie(m *models.SysMovie) error {
 	on, err := nu.GetMovieNumber(m)
 	if err != nil {
 		return err
@@ -303,6 +307,64 @@ func (nu *NameUpdater) AddMovie(m *models.Movie) error {
 	}
 
 	nu.movies = append(nu.movies, *m)
+
+	return nil
+}
+
+func MoveDirAndUpdateMovies(from string, to string, config *config.MongoConfig) error {
+	db.SetupMongo(config)
+
+	toPath := models.FilePath{Path: to}
+	fromPath := models.FilePath{Path: from}
+
+	dirName := fromPath.FileName()
+
+	isDir, _ := toPath.IsDir()
+	if !isDir {
+		logger.Error("MoveDir::To path:", to, "is not a dir")
+		return artemiserror.New(artemiserror.PathNotSet)
+	}
+
+	mh := MovieHandler{DirPaths: &([]models.FilePath{fromPath})}
+	err := mh.SetMovies()
+	if err != nil {
+		return err
+	}
+
+	mvs := make([]models.Movie, 0)
+
+	for _, m := range mh.Movies {
+		id := models.MovieIdentifier(m.Path())
+		logger.Debug("Got id:", id, "for path:", m.Path())
+		dm, err := dbinteractors.GetMovieByIdentifier(id)
+		if err != nil {
+			continue
+		}
+
+		mvs = append(mvs, *dm)
+	}
+
+	toDirPath := path.Join(to, dirName)
+	err = os.Rename(from, toDirPath)
+	if err != nil {
+		logger.Error("MoveDir::Failed to move dir from:", from, "to", to, "error", err)
+		return err
+	}
+
+	for _, m := range mvs {
+		np := path.Join(toDirPath, m.Name)
+		id := models.MovieIdentifier(np)
+
+		m.Path = np
+		m.Identifier = id
+
+		logger.Log("Updating movie identifier to:", id, "path:", np)
+
+		err = m.Save()
+		if err != nil {
+			logger.Warn("DirMover::FillMovies could not update identifier:", id, "for movie:", m.Name)
+		}
+	}
 
 	return nil
 }

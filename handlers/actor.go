@@ -1,23 +1,20 @@
 package handlers
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/greenac/artemis/artemiserror"
+	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"github.com/greenac/artemis/utils"
-	"io/ioutil"
 	"sort"
 	"strings"
 )
 
+type actorMap map[string]models.Actor
+
 type ActorHandler struct {
-	DirPaths   *[]models.FilePath
-	NamesPath  *models.FilePath
-	CachedPath *models.FilePath
-	Actors     map[string]*models.Actor
-	ToPath     *models.FilePath
+	Actors    actorMap
+	NamesPath *models.FilePath
 }
 
 func (ah *ActorHandler) SaveActorsToDb(acts *[]models.Actor) {
@@ -30,17 +27,30 @@ func (ah *ActorHandler) SaveActorsToDb(acts *[]models.Actor) {
 }
 
 func (ah *ActorHandler) FillActors() error {
-	ah.Actors = make(map[string]*models.Actor)
-	if err := ah.FillActorsFromDirs(); err != nil {
+	ah.Actors = make(actorMap)
+
+	err := ah.FillActorsFromDb()
+	if err != nil {
 		return err
 	}
 
-	if err := ah.FillActorsFromFile(); err != nil {
+	//if err := ah.FillActorsFromDirs(); err != nil { return err }
+	//
+	//if err := ah.FillActorsFromFile(); err != nil { return err }
+	//
+	//if err := ah.fillActorsFromCachedFile(); err != nil { return err }
+
+	return nil
+}
+
+func (ah *ActorHandler) FillActorsFromDb() error {
+	acts, err := dbinteractors.AllActors()
+	if err != nil {
 		return err
 	}
 
-	if err := ah.fillActorsFromCachedFile(); err != nil {
-		return err
+	for _, a := range *acts {
+		ah.Actors[a.FullName()] = a
 	}
 
 	return nil
@@ -66,102 +76,14 @@ func (ah *ActorHandler) FillActorsFromFile() error {
 			continue
 		}
 
-		ah.Actors[a.FullName()] = &a
+		ah.Actors[a.FullName()] = a
 	}
 
 	return nil
 }
 
-func (ah *ActorHandler) FillActorsFromDirs() error {
-	if ah.DirPaths == nil {
-		logger.Error("ActorHandler::FillActorsFromDirs Cannot fill actors from dirs. DirPaths not initialized")
-		return artemiserror.New(artemiserror.ArgsNotInitialized)
-	}
-
-	fNames := make([][]byte, 0)
-	for _, p := range *ah.DirPaths {
-		fh := FileHandler{BasePath: p}
-		err := fh.SetFiles()
-		if err != nil {
-			logger.Warn("ActorHandler::FillActorsFromDirs Could not fill actors from path:", p.PathAsString())
-			continue
-		}
-
-		names := fh.DirFileNames()
-		fNames = append(fNames, *names...)
-	}
-
-	for _, n := range fNames {
-		a, err := ah.CreateActor(string(n))
-		if err != nil {
-			continue
-		}
-
-		ah.Actors[a.FullName()] = &a
-	}
-
-	return nil
-}
-
-func (ah *ActorHandler) fillActorsFromCachedFile() error {
-	if ah.CachedPath == nil || !ah.CachedPath.PathDefined() {
-		return nil
-	}
-
-	data, err := ioutil.ReadFile(ah.CachedPath.Path)
-	if err != nil {
-		logger.Error("ActorHandler::fillActorsFromCachedFile Failed to read temp names file with error:", err)
-		return err
-	}
-
-	names := make([]string, 0)
-	err = json.Unmarshal(data, &names)
-	if err != nil {
-		logger.Error("`ActorHandler::fillActorsFromCachedFile` failed to unmarshal json file with error:", err)
-		return err
-	}
-
-	for _, n := range names {
-		a, err := ah.CreateActor(n)
-		if err != nil {
-			continue
-		}
-
-		ah.Actors[a.FullName()] = &a
-	}
-
-	return nil
-}
-
-func (ah *ActorHandler) WriteActorsToFile() error {
-	if ah.NamesPath == nil {
-		logger.Error("ActorHandler::WriteActorsToFile cannot write actors to file. NamesPath not initialized")
-		return artemiserror.New(artemiserror.ArgsNotInitialized)
-	}
-
-	acts := make([]string, len(ah.Actors))
-	i := 0
-	for n := range ah.Actors {
-		acts[i] = n
-		i += 1
-	}
-
-	sort.Slice(acts, func(i int, j int) bool {
-		return acts[i] < acts[j]
-	})
-
-	for _, a := range acts {
-		err := utils.AppendTxtToFile(ah.NamesPath.Path, a)
-		if err != nil {
-			logger.Warn("ActorHandler::WriteActorsToFile failed to write name:", a, "to names file", ah.NamesPath.Path)
-		}
-	}
-
-	return nil
-}
-
-func (ah *ActorHandler) SortedActors() []*models.Actor {
-	acts := make([]*models.Actor, len(ah.Actors))
+func (ah *ActorHandler) SortedActors() *[]models.Actor {
+	acts := make([]models.Actor, len(ah.Actors))
 	i := 0
 	for _, a := range ah.Actors {
 		acts[i] = a
@@ -172,7 +94,7 @@ func (ah *ActorHandler) SortedActors() []*models.Actor {
 		return acts[i].FullName() < acts[j].FullName()
 	})
 
-	return acts
+	return &acts
 }
 
 func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
@@ -190,21 +112,23 @@ func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
 	var a models.Actor
 	switch len(parts) {
 	case 1:
-		a = models.NewActor(parts[0], "", "")
+		a = dbinteractors.NewActor(parts[0], "", "")
 	case 2:
-		a = models.NewActor(parts[0], "", parts[1])
+		a = dbinteractors.NewActor(parts[0], "", parts[1])
 	case 3:
-		a = models.NewActor(parts[0], parts[1], parts[2])
+		a = dbinteractors.NewActor(parts[0], parts[1], parts[2])
 	default:
 		logger.Error("Cannot parse actor name:", name)
 		return models.Actor{}, errors.New("ActorNameInvalid")
 	}
 
-	_, _, err := models.CreateIfDoesNotExist(a)
+	_, err := a.Create()
 	if err != nil {
 		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
 		return a, err
 	}
+
+	logger.Debug("Created actor:", a, a.Id)
 
 	return a, nil
 }
@@ -213,7 +137,7 @@ func (ah *ActorHandler) Matches(name string) []*models.Actor {
 	actors := make([]*models.Actor, 0)
 	for _, a := range ah.Actors {
 		if a.IsMatch(name) {
-			actors = append(actors, a)
+			actors = append(actors, &a)
 		}
 	}
 
@@ -229,7 +153,7 @@ func (ah *ActorHandler) NameMatches(name string) (actors []*models.Actor, common
 	n := strings.ToLower(strings.Replace(name, " ", "_", -1))
 	for _, a := range ah.Actors {
 		if a.MatchWhole(n) {
-			acts = append(acts, a)
+			acts = append(acts, &a)
 		}
 	}
 
@@ -276,7 +200,7 @@ func (ah *ActorHandler) PrintActors() {
 func (ah *ActorHandler) ActorForName(name string) (actor *models.Actor, error error) {
 	a, has := ah.Actors[name]
 	if has {
-		return a, nil
+		return &a, nil
 	}
 
 	return nil, artemiserror.New(artemiserror.InvalidName)
@@ -285,7 +209,7 @@ func (ah *ActorHandler) ActorForName(name string) (actor *models.Actor, error er
 func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 	a, has := ah.Actors[name]
 	if has {
-		return a, nil
+		return &a, nil
 	}
 
 	act, err := ah.CreateActor(name)
@@ -293,17 +217,17 @@ func (ah *ActorHandler) AddNewActor(name string) (*models.Actor, error) {
 		return nil, err
 	}
 
-	ah.Actors[name] = &act
+	ah.Actors[name] = act
 
-	err = utils.AppendTxtToFile(ah.NamesPath.Path, name)
+	_, _, err = models.CreateIfDoesNotExist(&act)
 	if err != nil {
-		logger.Warn("ActorHandler::AddNewActor failed to write name:", name, "to names file", ah.NamesPath.Path)
+		return nil, err
 	}
 
 	return &act, nil
 }
 
-func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.Movie) {
+func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.SysMovie) {
 	input = strings.ToLower(input)
 	nms := strings.Split(input, ",")
 	for _, n := range nms {

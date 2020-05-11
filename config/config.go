@@ -16,6 +16,7 @@ type ArtemisConfig struct {
 	CachedNamesFile string      `json:"cachedNamesFile"`
 	StagingDir      string      `json:"stagingDir"`
 	ToDir           string      `json:"toDir"`
+	FromDir         string      `json:"fromDir"`
 	Url             string      `json:"url"`
 	Port            int         `json:"port"`
 	Mongo           MongoConfig `json:"mongo"`

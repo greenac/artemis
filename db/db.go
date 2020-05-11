@@ -74,6 +74,7 @@ func SetupMongo(config *config.MongoConfig) {
 
 func GetCollection(ct CollectionType) (*mongo.Collection, error) {
 	if db == nil {
+		logger.Error("GetCollection::Database not setup")
 		return nil, artemiserror.New(artemiserror.MongoNotSetUp)
 	}
 

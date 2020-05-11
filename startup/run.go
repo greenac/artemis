@@ -1,51 +1,60 @@
 package startup
 
 import (
-	"fmt"
-	"github.com/greenac/artemis/api"
-	"github.com/greenac/artemis/cli"
 	"github.com/greenac/artemis/config"
 	"github.com/greenac/artemis/db"
 	"github.com/greenac/artemis/handlers"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
-	"log"
-	"net/http"
 )
 
 type ArtemisRunType string
 
 const (
-	Rename             ArtemisRunType = "RENAME"
-	MoveMovies         ArtemisRunType = "MOVE_MOVIES"
-	OrganizeStagingDir ArtemisRunType = "ORGANIZE_STAGING_DIR"
-	WriteNames         ArtemisRunType = "WRITE_NAMES_TO_FILE"
-	Server             ArtemisRunType = "SERVER"
+	SaveActors         ArtemisRunType = "save-actors"
+	SaveMovies         ArtemisRunType = "save-movies"
+	MoveMovies         ArtemisRunType = "move-movies"
+	OrganizeStagingDir ArtemisRunType = "organize-staging-dir"
+	WriteNames         ArtemisRunType = "write-names=-to-file"
+	Server             ArtemisRunType = "server"
+	Test               ArtemisRunType = "test"
+	MoveDir            ArtemisRunType = "move-dir"
 )
 
-func RenameMovies(ac *config.ArtemisConfig) {
-	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
-	cachedPath := models.FilePath{Path: ac.CachedNamesFile}
-	stagingPath := models.FilePath{Path: ac.StagingDir}
+func SaveActorsFromFile(ac *config.ArtemisConfig) {
+	db.SetupMongo(&ac.Mongo)
 
-	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
-	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
+	p := models.FilePath{Path: ac.ActorNamesFile}
 
-	for i, p := range ac.TargetDirs {
-		targetPaths[i] = models.FilePath{Path: p}
-	}
-
-	for i, p := range ac.ActorDirs {
-		actorPaths[i] = models.FilePath{Path: p}
-	}
-
-	anh := ui.AddNamesHandler{}
-	err := anh.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
+	ah := handlers.ActorHandler{NamesPath: &p}
+	err := ah.FillActors()
 	if err != nil {
+		logger.Error("SaveActorsFromFile::Failed to fill up actor handler with error:", err)
 		panic(err)
 	}
 
-	anh.Run()
+	acts := ah.SortedActors()
+
+	ah.SaveActorsToDb(acts)
+}
+
+func SaveMoviesInDirs(ac *config.ArtemisConfig) {
+	db.SetupMongo(&ac.Mongo)
+
+	paths := make([]models.FilePath, len(ac.TargetDirs))
+
+	for i, p := range ac.TargetDirs {
+		paths[i] = models.FilePath{Path: p}
+	}
+
+	ah := handlers.ArtemisHandler{}
+	err := ah.Setup(&paths)
+	if err != nil {
+		logger.Error("SaveUnknown::Failed to set up artemis handler with error:", err)
+		panic(err)
+	}
+
+	ah.Sort()
 }
 
 func OrganizeStagingDirectory(ac *config.ArtemisConfig) {
@@ -57,7 +66,6 @@ func OrganizeStagingDirectory(ac *config.ArtemisConfig) {
 }
 
 func WriteNamesToFile(ac *config.ArtemisConfig) {
-	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
 	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
 	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
 
@@ -69,17 +77,9 @@ func WriteNamesToFile(ac *config.ArtemisConfig) {
 		actorPaths[i] = models.FilePath{Path: p}
 	}
 
-	ah := handlers.ActorHandler{
-		DirPaths:  &actorPaths,
-		NamesPath: &actNameFile,
-	}
+	ah := handlers.ActorHandler{}
 
 	err := ah.FillActors()
-	if err != nil {
-		panic(err)
-	}
-
-	err = ah.WriteActorsToFile()
 	if err != nil {
 		panic(err)
 	}
@@ -93,33 +93,29 @@ func MoveMoviesFromStagingToMaster(ac *config.ArtemisConfig) {
 }
 
 func RunServer(ac *config.ArtemisConfig) {
-	actNameFile := models.FilePath{Path: ac.ActorNamesFile}
-	cachedPath := models.FilePath{Path: ac.CachedNamesFile}
-	stagingPath := models.FilePath{Path: ac.StagingDir}
+	StartServer(ac)
+}
 
-	targetPaths := make([]models.FilePath, len(ac.TargetDirs))
-	actorPaths := make([]models.FilePath, len(ac.ActorDirs))
-
-	for i, p := range ac.TargetDirs {
-		targetPaths[i] = models.FilePath{Path: p}
-	}
-
-	for i, p := range ac.ActorDirs {
-		actorPaths[i] = models.FilePath{Path: p}
-	}
-
+func TestRun(ac *config.ArtemisConfig) {
 	db.SetupMongo(&ac.Mongo)
 
-	ah := handlers.ArtemisHandler{}
-	err := ah.Setup(&targetPaths, &actorPaths, &actNameFile, &cachedPath, &stagingPath)
-
+	ah := handlers.ActorHandler{}
+	err := ah.FillActors()
 	if err != nil {
-		panic(err)
+		logger.Error("getting actors", err)
 	}
 
-	logger.Log("Starting artemis server on", fmt.Sprintf("%s:%d", ac.Url, ac.Port))
+	for _, a := range *ah.SortedActors() {
+		logger.Error("in test run", a)
+	}
+}
 
-	http.HandleFunc("/api/all-actors", api.AllActors)
+func MoveMovieDirs(ac *config.ArtemisConfig) {
+	err := handlers.MoveDirAndUpdateMovies(ac.FromDir, ac.ToDir, &ac.Mongo)
+	if err != nil {
+		logger.Error("Failed to move dir from", ac.FromDir, "to:", ac.ToDir)
+		return
+	}
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", ac.Url, ac.Port), nil))
+	logger.Log("Successfully moved directories from:", ac.FromDir, "to:", ac.ToDir)
 }
