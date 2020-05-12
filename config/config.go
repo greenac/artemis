@@ -19,5 +19,6 @@ type ArtemisConfig struct {
 	FromDir         string      `json:"fromDir"`
 	Url             string      `json:"url"`
 	Port            int         `json:"port"`
+	VlcPath         string      `json:"vlcPath"`
 	Mongo           MongoConfig `json:"mongo"`
 }

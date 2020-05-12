@@ -5,6 +5,7 @@ import (
 	"github.com/greenac/artemis/dbinteractors"
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type MovieHandler struct {
@@ -80,4 +81,50 @@ func (mh *MovieHandler) AddKnownMovie(m models.SysMovie) {
 	}
 
 	mh.KnownMovies = append(mh.KnownMovies, dbm)
+}
+
+func AddActorsToMovie(movieId string, actorIds []string) error {
+	logger.Debug("movie id:", movieId, "actor ids:", actorIds)
+
+	movId, err := primitive.ObjectIDFromHex(movieId)
+	if err != nil {
+		logger.Error("AddActorsToMovie::failed to create ObjectId from:", movieId, "error:", err)
+		return err
+	}
+
+	m, err := dbinteractors.GetMovieById(movId)
+	if err != nil {
+		return err
+	}
+
+	save := false
+	for _, aId := range actorIds {
+		actId, err := primitive.ObjectIDFromHex(aId)
+		if err != nil {
+			logger.Warn("AddActorsToMovie::failed to create ObjectId from actorId:", aId, "error:", err)
+			continue
+		}
+
+		a, err := dbinteractors.GetActorById(actId)
+		if err != nil {
+			logger.Warn("AddActorsToMovie::Could not get actor with id:", actId, err)
+			continue
+		}
+
+		a.AddMovie(movId)
+		err = a.Save()
+		if err != nil {
+			logger.Warn("AddActorsToMovie::Could not add movie:", m.Name, "to actor:", a.FullName(), "error:", err)
+			continue
+		}
+
+		m.AddActor(actId)
+		save = true
+	}
+
+	if save {
+		_ = m.Save()
+	}
+
+	return nil
 }

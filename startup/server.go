@@ -11,9 +11,12 @@ import (
 )
 
 const (
-	allActors     string = "/api/actor/all"
-	actorsMatch   string = "/api/actor/match"
-	unknownMovies string = "/api/movie/unknown"
+	allActors        string = "/api/actor/all"
+	newActor         string = "/api/actor/new"
+	actorsMatch      string = "/api/actor/match"
+	addActorsToMovie string = "/api/movie/add-actors"
+	openMovie string = "/api/movie/open"
+	unknownMovies    string = "/api/movie/unknown"
 )
 
 func StartServer(ac *config.ArtemisConfig) {
@@ -23,9 +26,15 @@ func StartServer(ac *config.ArtemisConfig) {
 
 	logger.Log("Starting artemis server on", url)
 
+	// Actor routes
 	http.HandleFunc(allActors, api.AllActors)
-	http.HandleFunc(unknownMovies, api.UnknownMovies)
 	http.HandleFunc(actorsMatch, api.ActorsMatchingInput)
+	http.HandleFunc(newActor, api.CreateActorWithName)
+
+	// movie routes
+	http.HandleFunc(unknownMovies, api.UnknownMovies)
+	http.HandleFunc(addActorsToMovie, api.AddActorsToMovie)
+	http.HandleFunc(openMovie, api.OpenMovie)
 
 	log.Fatal(http.ListenAndServe(url, nil))
 }
