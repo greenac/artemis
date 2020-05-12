@@ -6,6 +6,8 @@ import (
 	"github.com/greenac/artemis/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"sort"
+	"strings"
 )
 
 func NewMovie(name string, path string) models.Movie {
@@ -35,6 +37,16 @@ func GetMovieById(id primitive.ObjectID) (*models.Movie, error) {
 	}
 
 	return &m, nil
+}
+
+func GetMovieByIdString(id string) (*models.Movie, error) {
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		logger.Error("GetMovieByIdString::failed to create ObjectId from:", id, "error:", err)
+		return nil, err
+	}
+
+	return GetMovieById(objId)
 }
 
 func GetMovieByIdentifier(id string) (*models.Movie, error) {
@@ -91,6 +103,10 @@ func UnknownMovies() (*[]models.Movie, error) {
 
 		mvs = append(mvs, m)
 	}
+
+	sort.SliceStable(mvs, func(i, j int) bool {
+		return strings.ToLower(mvs[i].Name) < strings.ToLower(mvs[j].Name)
+	})
 
 	return &mvs, nil
 }

@@ -7,8 +7,11 @@ import (
 	"github.com/greenac/artemis/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"strings"
 )
+
+const MaxActorsToReturn = 25
 
 func AllActors() (*[]models.Actor, error) {
 	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
@@ -102,14 +105,49 @@ func GetActorsForInput(input string) (*[]models.Actor, error) {
 	switch len(nms) {
 	case 1:
 		filter = bson.D{
-			bson.E{
-				Key: "firstName",
-				Value: bson.D{
-					{
-						"$regex",
-						primitive.Regex{
-							Pattern: fmt.Sprintf("^%s", nms[0]),
-							Options: "i",
+			{
+				Key: "$or",
+				Value: bson.A{
+					bson.D{
+						{
+							Key: "firstName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[0]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+					bson.D{
+						{
+							Key: "middleName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[0]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+					bson.D{
+						{
+							Key: "lastName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[0]),
+										Options: "i",
+									},
+								},
+							},
 						},
 					},
 				},
@@ -209,7 +247,13 @@ func GetActorsForInput(input string) (*[]models.Actor, error) {
 		return nil, err
 	}
 
-	cur, err := cAndT.Col.Find(cAndT.Ctx, filter)
+	opts := options.Find()
+	opts.SetSort(bson.D{
+		{"fistName", 1},
+	})
+	opts.SetLimit(MaxActorsToReturn)
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, filter, opts)
 	if err != nil {
 		logger.Error("GetActorsForInput::Failed with error:", err)
 		return nil, err

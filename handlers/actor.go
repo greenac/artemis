@@ -98,39 +98,7 @@ func (ah *ActorHandler) SortedActors() *[]models.Actor {
 }
 
 func (ah *ActorHandler) CreateActor(name string) (models.Actor, error) {
-	if len(name) == 0 {
-		logger.Error("ActorHandler::createActor invalid name:", name)
-		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
-	}
-
-	n := strings.TrimSpace(name)
-	parts := strings.Split(n, " ")
-	if len(parts) == 1 {
-		parts = strings.Split(n, "_")
-	}
-
-	var a models.Actor
-	switch len(parts) {
-	case 1:
-		a = dbinteractors.NewActor(parts[0], "", "")
-	case 2:
-		a = dbinteractors.NewActor(parts[0], "", parts[1])
-	case 3:
-		a = dbinteractors.NewActor(parts[0], parts[1], parts[2])
-	default:
-		logger.Error("Cannot parse actor name:", name)
-		return models.Actor{}, errors.New("ActorNameInvalid")
-	}
-
-	_, err := a.Create()
-	if err != nil {
-		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
-		return a, err
-	}
-
-	logger.Debug("Created actor:", a, a.Id)
-
-	return a, nil
+	return CreateNewActor(name)
 }
 
 func (ah *ActorHandler) Matches(name string) []*models.Actor {
@@ -242,4 +210,40 @@ func (ah *ActorHandler) AddActorsToMovieWithInput(input string, movie *models.Sy
 			movie.UpdateNewName(a)
 		}
 	}
+}
+
+func CreateNewActor(name string) (models.Actor, error) {
+	if len(name) == 0 {
+		logger.Error("CreateNewActor invalid name:", name)
+		return models.Actor{}, artemiserror.New(artemiserror.ArgsNotInitialized)
+	}
+
+	n := strings.TrimSpace(name)
+	parts := strings.Split(n, " ")
+	if len(parts) == 1 {
+		parts = strings.Split(n, "_")
+	}
+
+	var a models.Actor
+	switch len(parts) {
+	case 1:
+		a = dbinteractors.NewActor(parts[0], "", "")
+	case 2:
+		a = dbinteractors.NewActor(parts[0], "", parts[1])
+	case 3:
+		a = dbinteractors.NewActor(parts[0], parts[1], parts[2])
+	default:
+		logger.Error("Cannot parse actor name:", name)
+		return models.Actor{}, errors.New("ActorNameInvalid")
+	}
+
+	_, err := a.Create()
+	if err != nil {
+		logger.Error("ActorHandler::createActor cannot create actor:", name, err)
+		return a, err
+	}
+
+	logger.Debug("Created actor:", a, a.Id)
+
+	return a, nil
 }
