@@ -110,3 +110,57 @@ func UnknownMovies() (*[]models.Movie, error) {
 
 	return &mvs, nil
 }
+
+func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
+	cAndT, err := db.GetCollectionAndContext(db.MovieCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	params := primitive.A{}
+
+	for _, id := range ids {
+		v := bson.D{
+			{
+				Key: "_id",
+				Value: id,
+			},
+		}
+
+		params = append(params, v)
+	}
+
+	q := bson.D{
+		{
+			Key: "$or",
+			Value: params,
+		},
+	}
+
+	c, err := cAndT.Col.Find(cAndT.Ctx, q)
+	if err != nil {
+		logger.Error("MoviesForIds::Failed to find unknown movies:", err)
+		return nil, err
+	}
+
+	mvs := make([]models.Movie, 0)
+
+	defer c.Close(cAndT.Ctx)
+
+	for c.Next(cAndT.Ctx) {
+		var m models.Movie
+		err := c.Decode(&m)
+		if err != nil {
+			logger.Warn("MoviesForIds::Failed to decode movie with error:", err)
+			continue
+		}
+
+		mvs = append(mvs, m)
+	}
+
+	sort.SliceStable(mvs, func(i, j int) bool {
+		return strings.ToLower(mvs[i].Name) < strings.ToLower(mvs[j].Name)
+	})
+
+	return &mvs, nil
+}

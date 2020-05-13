@@ -128,3 +128,18 @@ func AddActorsToMovie(movieId string, actorIds []string) error {
 
 	return nil
 }
+
+func GetMovieWithIds(ids []string) (*[]models.Movie, error) {
+	objIds := make([]primitive.ObjectID, len(ids))
+	for i, id := range ids {
+		objId, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			logger.Warn("GetMovieIds could not make object id from:", id)
+			continue
+		}
+
+		objIds[i] = objId
+	}
+
+	return dbinteractors.MoviesForIds(objIds)
+}
