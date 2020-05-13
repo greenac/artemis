@@ -97,17 +97,7 @@ func RunServer(ac *config.ArtemisConfig) {
 }
 
 func TestRun(ac *config.ArtemisConfig) {
-	db.SetupMongo(&ac.Mongo)
 
-	ah := handlers.ActorHandler{}
-	err := ah.FillActors()
-	if err != nil {
-		logger.Error("getting actors", err)
-	}
-
-	for _, a := range *ah.SortedActors() {
-		logger.Error("in test run", a)
-	}
 }
 
 func MoveMovieDirs(ac *config.ArtemisConfig) {
