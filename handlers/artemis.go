@@ -36,7 +36,7 @@ func (ah *ArtemisHandler) Setup(movieDirPaths *[]models.FilePath) error {
 	return nil
 }
 
-func (ah *ArtemisHandler) Sort() {
+func (ah *ArtemisHandler) Save() {
 	for _, m := range ah.MovieHandler.Movies {
 		m.GetNewName()
 

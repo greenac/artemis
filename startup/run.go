@@ -54,7 +54,7 @@ func SaveMoviesInDirs(ac *config.ArtemisConfig) {
 		panic(err)
 	}
 
-	ah.Sort()
+	ah.Save()
 }
 
 func OrganizeStagingDirectory(ac *config.ArtemisConfig) {
