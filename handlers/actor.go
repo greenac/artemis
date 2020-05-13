@@ -247,3 +247,7 @@ func CreateNewActor(name string) (models.Actor, error) {
 
 	return a, nil
 }
+
+func MatchActorName(name string) (*[]models.Actor, error) {
+
+}

@@ -59,7 +59,7 @@ func GetMovieByIdentifier(id string) (*models.Movie, error) {
 
 	err = res.Decode(&m)
 	if err != nil {
-		logger.Error("GetMovieByIdentifier::Failed to decode model with identifier:", id, "error:", err)
+		logger.Error("GetMovieByIdentifier::Failed to decode movie with identifier:", id, "error:", err)
 		return nil, err
 	}
 
