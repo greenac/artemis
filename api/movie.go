@@ -87,3 +87,30 @@ func OpenMovie(w http.ResponseWriter, r *http.Request) {
 	res.SetPayload("success", true)
 	res.Respond(w)
 }
+
+func MoviesForIds(w http.ResponseWriter, r *http.Request) {
+	logger.Log("Getting movies for ids...")
+
+	res := utils.Response{Code: http.StatusOK}
+
+	var body struct {
+		MovieIds  []string   `json:"movieIds"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&body)
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	mvs, err := handlers.GetMovieWithIds(body.MovieIds)
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("movies", mvs)
+	res.Respond(w)
+}

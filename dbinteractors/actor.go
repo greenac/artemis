@@ -44,6 +44,44 @@ func AllActors() (*[]models.Actor, error) {
 	return &acts, nil
 }
 
+func AllActorsWithMovies() (*[]models.Actor, error) {
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	qry := bson.D{
+		{
+			Key: "$where",
+			Value: "this.movieIds.length>0",
+		},
+	}
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, qry)
+	if err != nil {
+		logger.Error("AllActorsWithMovies::failed with error:", err)
+		return nil, err
+	}
+
+	acts := make([]models.Actor, 0)
+
+	defer cur.Close(cAndT.Ctx)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("AllActorsWithMovies failed to decode actor with error:", err)
+			continue
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
+}
+
 func NewActor(firstName string, middleName string, lastName string) models.Actor {
 	a := models.Actor{
 		FirstName:  firstName,

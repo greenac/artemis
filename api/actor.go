@@ -7,6 +7,7 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/utils"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -21,6 +22,26 @@ func AllActors(w http.ResponseWriter, r *http.Request) {
 		res.Respond(w)
 		return
 	}
+
+	res.SetPayload("actors", acts)
+	res.Respond(w)
+}
+
+func AllActorsWithMovies(w http.ResponseWriter, r *http.Request) {
+	logger.Log("Getting all actors...")
+
+	res := utils.Response{Code: http.StatusOK}
+
+	acts, err := dbinteractors.AllActorsWithMovies()
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	sort.SliceStable(acts, func(i, j int) bool {
+		return strings.ToLower((*acts)[i].FullName()) < strings.ToLower((*acts)[j].FullName())
+	})
 
 	res.SetPayload("actors", acts)
 	res.Respond(w)
