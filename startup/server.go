@@ -15,7 +15,7 @@ const (
 	newActor         string = "/api/actor/new"
 	actorsMatch      string = "/api/actor/match"
 	addActorsToMovie string = "/api/movie/add-actors"
-	openMovie string = "/api/movie/open"
+	openMovie        string = "/api/movie/open"
 	unknownMovies    string = "/api/movie/unknown"
 )
 

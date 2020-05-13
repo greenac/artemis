@@ -8,7 +8,6 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/models"
 	"github.com/greenac/artemis/utils"
-	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -311,22 +310,31 @@ func (nu *NameUpdater) AddMovie(m *models.SysMovie) error {
 	return nil
 }
 
-func MoveDirAndUpdateMovies(from string, to string, config *config.MongoConfig) error {
+func MoveDirAndUpdateMovies(from string, toBase string, config *config.MongoConfig) error {
 	db.SetupMongo(config)
 
-	toPath := models.FilePath{Path: to}
+	toPath := models.FilePath{Path: toBase}
 	fromPath := models.FilePath{Path: from}
 
 	dirName := fromPath.FileName()
 
+	toDirPath := path.Join(toBase, dirName)
+
+	err := utils.CreateDir(toDirPath)
+	if err != nil {
+		return err
+	}
+
+	logger.Log("MoveDirAndUpdateMovies::Creating directory:", toDirPath)
+
 	isDir, _ := toPath.IsDir()
 	if !isDir {
-		logger.Error("MoveDir::To path:", to, "is not a dir")
+		logger.Error("MoveDir::To path:", toDirPath, "is not a dir")
 		return artemiserror.New(artemiserror.PathNotSet)
 	}
 
 	mh := MovieHandler{DirPaths: &([]models.FilePath{fromPath})}
-	err := mh.SetMovies()
+	err = mh.SetMovies()
 	if err != nil {
 		return err
 	}
@@ -341,14 +349,14 @@ func MoveDirAndUpdateMovies(from string, to string, config *config.MongoConfig) 
 			continue
 		}
 
-		mvs = append(mvs, *dm)
-	}
+		mp := path.Join(toDirPath, m.Name())
+		err = utils.MoveFile(m.Path(), mp, true)
+		if err != nil {
+			logger.Error("MoveDir::Failed to move dir from:", from, "to", mp, "error", err)
+			continue
+		}
 
-	toDirPath := path.Join(to, dirName)
-	err = os.Rename(from, toDirPath)
-	if err != nil {
-		logger.Error("MoveDir::Failed to move dir from:", from, "to", to, "error", err)
-		return err
+		mvs = append(mvs, *dm)
 	}
 
 	for _, m := range mvs {

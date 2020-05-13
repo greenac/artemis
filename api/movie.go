@@ -31,7 +31,7 @@ func AddActorsToMovie(w http.ResponseWriter, r *http.Request) {
 	res := utils.Response{Code: http.StatusOK}
 
 	var body struct {
-		MovieId string `json:"movieId"`
+		MovieId  string   `json:"movieId"`
 		ActorIds []string `json:"actorIds"`
 	}
 
@@ -87,4 +87,3 @@ func OpenMovie(w http.ResponseWriter, r *http.Request) {
 	res.SetPayload("success", true)
 	res.Respond(w)
 }
-

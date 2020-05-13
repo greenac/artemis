@@ -91,6 +91,7 @@ func (m *Movie) AddActor(actorId primitive.ObjectID) bool {
 	}
 
 	logger.Debug("Movie:", m.Name, "Adding actor:", actorId)
+
 	m.ActorIds = append(m.ActorIds, actorId)
 
 	return true
