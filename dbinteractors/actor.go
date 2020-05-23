@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"strings"
+	"time"
 )
 
 const MaxActorsToReturn = 25
@@ -52,7 +53,7 @@ func AllActorsWithMovies() (*[]models.Actor, error) {
 
 	qry := bson.D{
 		{
-			Key: "$where",
+			Key:   "$where",
 			Value: "this.movieIds.length>0",
 		},
 	}
@@ -91,6 +92,7 @@ func NewActor(firstName string, middleName string, lastName string) models.Actor
 
 	a.Identifier = a.GetIdentifier()
 	a.MovieIds = make([]primitive.ObjectID, 0)
+	a.Updated = time.Now()
 
 	return a
 }
@@ -130,13 +132,66 @@ func GetActorByIdentifier(id string) (*models.Actor, error) {
 	return &a, nil
 }
 
-func GetActorsForInput(input string) (*[]models.Actor, error) {
+func GetActorByIdString(actorId string) (*models.Actor, error) {
+	id, err := primitive.ObjectIDFromHex(actorId)
+	if err != nil {
+		logger.Warn("GetActorByIdString could not make object id from:", actorId)
+		return nil, err
+	}
+
+	return GetActorById(id)
+}
+
+func GetActorsForIds(ids []primitive.ObjectID) (*[]models.Actor, error) {
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.D{
+		{
+			Key: "_id",
+			Value: bson.D{
+				{
+					Key:   "$in",
+					Value: ids,
+				},
+			},
+		},
+	}
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, filter)
+	if err != nil {
+		logger.Error("GetActorsForIds::Failed to make query for actor ids:", ids, err)
+		return nil, err
+	}
+
+	defer cur.Close(cAndT.Ctx)
+
+	acts := make([]models.Actor, 0)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("GetActorsForIds::Failed to decode actor with error:", err)
+			continue
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
+}
+
+func GetActorsForInput(input string, withMovs bool) (*[]models.Actor, error) {
 	acts := make([]models.Actor, 0)
 	if input == "" {
 		return &acts, nil
 	}
 
-	var filter interface{}
+	var filter bson.D
 
 	nms := strings.Split(input, " ")
 
@@ -280,6 +335,13 @@ func GetActorsForInput(input string) (*[]models.Actor, error) {
 		}
 	}
 
+	if withMovs {
+		filter = append(filter, bson.E{
+			Key:   "$where",
+			Value: "this.movieIds.length>0",
+		})
+	}
+
 	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
 	if err != nil {
 		return nil, err
@@ -290,6 +352,161 @@ func GetActorsForInput(input string) (*[]models.Actor, error) {
 		{"fistName", 1},
 	})
 	opts.SetLimit(MaxActorsToReturn)
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, filter, opts)
+	if err != nil {
+		logger.Error("GetActorsForInput::Failed with error:", err)
+		return nil, err
+	}
+
+	defer cur.Close(cAndT.Ctx)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("GetActorsForInput::Failed to decode actor with error:", err)
+			continue
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
+}
+
+func GetActorsForInputSimple(input string, withMovs bool) (*[]models.Actor, error) {
+	acts := make([]models.Actor, 0)
+	if input == "" {
+		return &acts, nil
+	}
+
+	var filter bson.D
+
+	nms := strings.Split(input, " ")
+
+	switch len(nms) {
+	case 1:
+		filter = bson.D{
+			{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+		}
+	case 2:
+		filter = bson.D{
+			{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "$or",
+				Value: bson.A{
+					bson.D{
+						{
+							Key: "middleName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[1]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+					bson.D{
+						{
+							Key: "lastName",
+							Value: bson.D{
+								{
+									"$regex",
+									primitive.Regex{
+										Pattern: fmt.Sprintf("^%s", nms[1]),
+										Options: "i",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+	default:
+		filter = bson.D{
+			{
+				Key: "firstName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[0]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "middleName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[1]),
+							Options: "i",
+						},
+					},
+				},
+			},
+			{
+				Key: "lastName",
+				Value: bson.D{
+					{
+						"$regex",
+						primitive.Regex{
+							Pattern: fmt.Sprintf("^%s", nms[2]),
+							Options: "i",
+						},
+					},
+				},
+			},
+		}
+	}
+
+	if withMovs {
+		filter = append(filter, bson.E{
+			Key:   "$where",
+			Value: "this.movieIds.length>0",
+		})
+	}
+
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Find()
+	opts.SetSort(bson.D{
+		{"fistName", 1},
+	})
 
 	cur, err := cAndT.Col.Find(cAndT.Ctx, filter, opts)
 	if err != nil {
