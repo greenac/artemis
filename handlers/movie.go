@@ -170,7 +170,9 @@ func GetMoviesForActor(actorId string) (*[]models.Movie, error) {
 
 func DeleteMovie(movieId string) error {
 	m, err := dbinteractors.GetMovieByIdString(movieId)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	err = os.Remove(m.Path)
 	if err != nil {
@@ -184,10 +186,14 @@ func DeleteMovie(movieId string) error {
 func AddOrganizedMovies(basePath string) error {
 	fh := FileHandler{BasePath: models.FilePath{Path: basePath}}
 	err := fh.SetFiles()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	acts, err := dbinteractors.AllActors()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	actors := *acts
 	for _, df := range fh.Files {
@@ -197,7 +203,9 @@ func AddOrganizedMovies(basePath string) error {
 
 		mfh := FileHandler{BasePath: models.FilePath{Path: path.Join(df.Path())}}
 		err := mfh.SetFiles()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		for _, f := range mfh.Files {
 			if !f.IsMovie() {
@@ -205,7 +213,9 @@ func AddOrganizedMovies(basePath string) error {
 			}
 
 			m, err := dbinteractors.FindOrCreate(f.Name(), f.Path())
-			if err != nil { continue }
+			if err != nil {
+				continue
+			}
 
 			save := false
 			for i, a := range actors {

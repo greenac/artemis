@@ -12,7 +12,9 @@ import (
 func RemoveSymLinks(basePath string) error {
 	fh := handlers.FileHandler{BasePath: models.FilePath{Path: basePath}}
 	err := fh.SetFiles()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	for _, df := range fh.Files {
 		if !df.IsDir() {
@@ -21,7 +23,9 @@ func RemoveSymLinks(basePath string) error {
 
 		mfh := handlers.FileHandler{BasePath: models.FilePath{Path: path.Join(df.Path())}}
 		err := mfh.SetFiles()
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		for _, f := range mfh.Files {
 			if !f.IsMovie() {
@@ -34,17 +38,21 @@ func RemoveSymLinks(basePath string) error {
 				continue
 			}
 
-			if !(info.Mode() & os.ModeSymlink == os.ModeSymlink) {
+			if !(info.Mode()&os.ModeSymlink == os.ModeSymlink) {
 				continue
 			}
 
 			mid := models.MovieIdentifier(f.Path())
 			m, err := dbinteractors.GetMovieByIdentifier(mid)
-			if err != nil { continue }
+			if err != nil {
+				continue
+			}
 
 			for _, aid := range m.ActorIds {
 				act, err := dbinteractors.GetActorById(aid)
-				if err != nil { continue }
+				if err != nil {
+					continue
+				}
 				up := act.RemoveMovie(m.Id)
 				if up {
 					logger.Log("Removing movie:", m.Name, "for actor:", act.FullNameNoUnderscores())

@@ -87,7 +87,7 @@ func MoviesForIds(w http.ResponseWriter, r *http.Request) {
 	res := utils.Response{Code: http.StatusOK}
 
 	var body struct {
-		MovieIds  []string   `json:"movieIds"`
+		MovieIds []string `json:"movieIds"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&body)

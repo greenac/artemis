@@ -53,7 +53,7 @@ func AllActorsWithMovies() (*[]models.Actor, error) {
 
 	qry := bson.D{
 		{
-			Key: "$where",
+			Key:   "$where",
 			Value: "this.movieIds.length>0",
 		},
 	}
@@ -153,7 +153,7 @@ func GetActorsForIds(ids []primitive.ObjectID) (*[]models.Actor, error) {
 			Key: "_id",
 			Value: bson.D{
 				{
-					Key: "$in",
+					Key:   "$in",
 					Value: ids,
 				},
 			},
@@ -181,7 +181,6 @@ func GetActorsForIds(ids []primitive.ObjectID) (*[]models.Actor, error) {
 
 		acts = append(acts, a)
 	}
-
 
 	return &acts, nil
 }
@@ -338,7 +337,7 @@ func GetActorsForInput(input string, withMovs bool) (*[]models.Actor, error) {
 
 	if withMovs {
 		filter = append(filter, bson.E{
-			Key: "$where",
+			Key:   "$where",
 			Value: "this.movieIds.length>0",
 		})
 	}
@@ -494,7 +493,7 @@ func GetActorsForInputSimple(input string, withMovs bool) (*[]models.Actor, erro
 
 	if withMovs {
 		filter = append(filter, bson.E{
-			Key: "$where",
+			Key:   "$where",
 			Value: "this.movieIds.length>0",
 		})
 	}

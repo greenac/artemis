@@ -146,7 +146,7 @@ func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
 	for _, id := range ids {
 		v := bson.D{
 			{
-				Key: "_id",
+				Key:   "_id",
 				Value: id,
 			},
 		}
@@ -156,7 +156,7 @@ func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
 
 	q := bson.D{
 		{
-			Key: "$or",
+			Key:   "$or",
 			Value: params,
 		},
 	}
@@ -166,7 +166,6 @@ func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
 		logger.Error("MoviesForIds::Failed to find unknown movies:", err)
 		return nil, err
 	}
-
 
 	defer c.Close(cAndT.Ctx)
 
@@ -194,7 +193,7 @@ func DeleteMovie(id primitive.ObjectID) error {
 		return err
 	}
 
-	par := bson.D{{ Key: "_id", Value: id }}
+	par := bson.D{{Key: "_id", Value: id}}
 	_, err = cAndT.Col.DeleteOne(cAndT.Ctx, par)
 	return err
 }

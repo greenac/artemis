@@ -32,7 +32,7 @@ type Movie struct {
 	MetaData   string               `json:"meta" bson:"meta"`
 	RepeatNum  int                  `json:"repeatNum" bson:"repeatNum"`
 	ActorIds   []primitive.ObjectID `json:"actorIds" bson:"actorIds"`
-	Actors     *[]Actor            `json:"actors" bson:"-"`
+	Actors     *[]Actor             `json:"actors" bson:"-"`
 	Updated    time.Time            `json:"updated" bson:"updated"`
 }
 

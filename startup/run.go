@@ -12,14 +12,14 @@ import (
 type ArtemisRunType string
 
 const (
-	SaveActors         ArtemisRunType = "save-actors"
-	SaveMovies         ArtemisRunType = "save-movies"
-	WriteNames         ArtemisRunType = "write-names=-to-file"
-	Server             ArtemisRunType = "server"
-	Test               ArtemisRunType = "test"
-	MoveDir            ArtemisRunType = "move-dir"
-	ConvertOrganized   ArtemisRunType = "convert-organized"
-	RemoveLinks        ArtemisRunType = "remove-links"
+	SaveActors       ArtemisRunType = "save-actors"
+	SaveMovies       ArtemisRunType = "save-movies"
+	WriteNames       ArtemisRunType = "write-names=-to-file"
+	Server           ArtemisRunType = "server"
+	Test             ArtemisRunType = "test"
+	MoveDir          ArtemisRunType = "move-dir"
+	ConvertOrganized ArtemisRunType = "convert-organized"
+	RemoveLinks      ArtemisRunType = "remove-links"
 )
 
 func SaveActorsFromFile(ac *config.ArtemisConfig) {

@@ -11,20 +11,20 @@ import (
 )
 
 const (
-	actor             string = "/api/actor"
-	allActors        string = "/api/actor/all"
-	allActorsWithMovies        string = "/api/actor/all-with-movies"
-	newActor         string = "/api/actor/new"
-	actorsMatch      string = "/api/actor/match"
-	actorsMatchWithMovies      string = "/api/actor/match-with-movies"
-	actorsSimpleMatchWithMovies      string = "/api/actor/simple-match-with-movies"
-	actorsMovies     string = "/api/actor/movies"
-	addActorsToMovie string = "/api/movie/add-actors"
-	openMovie        string = "/api/movie/open"
-	unknownMovies    string = "/api/movie/unknown"
-	moviesForIds     string = "/api/movie/ids"
-	deleteMovie      string = "/api/movie/delete"
-	searchMovieByDate      string = "/api/movie/search-date"
+	actor                       string = "/api/actor"
+	allActors                   string = "/api/actor/all"
+	allActorsWithMovies         string = "/api/actor/all-with-movies"
+	newActor                    string = "/api/actor/new"
+	actorsMatch                 string = "/api/actor/match"
+	actorsMatchWithMovies       string = "/api/actor/match-with-movies"
+	actorsSimpleMatchWithMovies string = "/api/actor/simple-match-with-movies"
+	actorsMovies                string = "/api/actor/movies"
+	addActorsToMovie            string = "/api/movie/add-actors"
+	openMovie                   string = "/api/movie/open"
+	unknownMovies               string = "/api/movie/unknown"
+	moviesForIds                string = "/api/movie/ids"
+	deleteMovie                 string = "/api/movie/delete"
+	searchMovieByDate           string = "/api/movie/search-date"
 )
 
 func StartServer(ac *config.ArtemisConfig) {

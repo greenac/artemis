@@ -41,7 +41,7 @@ func (x *Movie) Reset() {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
-}ssadaaz
+}
 
 func (x *Movie) String() string {
 	return protoimpl.X.MessageStringOf(x)
