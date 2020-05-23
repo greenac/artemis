@@ -14,7 +14,7 @@ type ArtemisConfig struct {
 	ActorDirs       []string    `json:"actorDirs"`
 	ActorNamesFile  string      `json:"actorNamesFile"`
 	CachedNamesFile string      `json:"cachedNamesFile"`
-	StagingDir      string      `json:"stagingDir"`
+	OrganizedDir    string      `json:"organizedDir"`
 	ToDir           string      `json:"toDir"`
 	FromDir         string      `json:"fromDir"`
 	Url             string      `json:"url"`

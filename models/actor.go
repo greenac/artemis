@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/fatih/structs"
 	"github.com/greenac/artemis/db"
-	"github.com/greenac/artemis/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strings"
+	"time"
 )
 
 type NamePart string
@@ -26,6 +26,7 @@ type Actor struct {
 	MiddleName string               `json:"middleName" bson:"middleName"`
 	LastName   string               `json:"lastName" bson:"lastName"`
 	MovieIds   []primitive.ObjectID `json:"movieIds" bson:"movieIds"`
+	Updated    time.Time            `json:"updated" bson:"updated"`
 }
 
 // Model Interface methods
@@ -60,6 +61,7 @@ func (a *Actor) GetCollectionType() db.CollectionType {
 }
 
 func (a *Actor) Save() error {
+	a.Updated = time.Now()
 	return Save(a)
 }
 
@@ -74,6 +76,7 @@ func (a *Actor) Create() (*primitive.ObjectID, error) {
 	}
 
 	a.Id = *id
+	a.Updated = time.Now()
 
 	return id, nil
 }
@@ -205,9 +208,25 @@ func (a *Actor) AddMovie(id primitive.ObjectID) bool {
 		}
 	}
 
-	logger.Debug("Actor:", a.FullName(), "Adding movie:", id)
-
 	a.MovieIds = append(a.MovieIds, id)
+
+	return true
+}
+
+func (a *Actor) RemoveMovie(id primitive.ObjectID) bool {
+	t := -1
+	for i, mid := range a.MovieIds {
+		if mid == id {
+			t = i
+			break
+		}
+	}
+
+	if t == -1 {
+		return false
+	}
+
+	a.MovieIds = append(a.MovieIds[:t], a.MovieIds[t+1:]...)
 
 	return true
 }

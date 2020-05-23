@@ -7,6 +7,7 @@ import (
 	"github.com/greenac/artemis/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
 )
 
 type ShowType string
@@ -31,7 +32,8 @@ type Movie struct {
 	MetaData   string               `json:"meta" bson:"meta"`
 	RepeatNum  int                  `json:"repeatNum" bson:"repeatNum"`
 	ActorIds   []primitive.ObjectID `json:"actorIds" bson:"actorIds"`
-	Actors     *[]*Actor            `json:"actors" bson:"-"`
+	Actors     *[]Actor            `json:"actors" bson:"-"`
+	Updated    time.Time            `json:"updated" bson:"updated"`
 }
 
 func (m *Movie) GetId() primitive.ObjectID {
@@ -71,6 +73,7 @@ func (m *Movie) Create() (*primitive.ObjectID, error) {
 	}
 
 	m.Id = *id
+	m.Updated = time.Now()
 
 	return id, nil
 }
@@ -80,6 +83,7 @@ func (m *Movie) Upsert() (*primitive.ObjectID, error) {
 }
 
 func (m *Movie) Save() error {
+	m.Updated = time.Now()
 	return Save(m)
 }
 

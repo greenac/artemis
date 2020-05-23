@@ -51,10 +51,6 @@ func main() {
 	switch rt {
 	case startup.SaveActors:
 		startup.SaveActorsFromFile(&ac)
-	case startup.MoveMovies:
-		startup.MoveMoviesFromStagingToMaster(&ac)
-	case startup.OrganizeStagingDir:
-		startup.OrganizeStagingDirectory(&ac)
 	case startup.WriteNames:
 		startup.WriteNamesToFile(&ac)
 	case startup.Server:
@@ -65,6 +61,10 @@ func main() {
 		startup.MoveMovieDirs(&ac)
 	case startup.Test:
 		startup.TestRun(&ac)
+	case startup.ConvertOrganized:
+		startup.UpdateOrganizedMovies(&ac)
+	case startup.RemoveLinks:
+		startup.RemoveSymLinks(&ac)
 	default:
 		logger.Error("Unknown run type:", rt)
 		panic(artemiserror.New(artemiserror.InvalidParameter))

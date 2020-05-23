@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sort"
 	"strings"
+	"time"
 )
 
 func NewMovie(name string, path string) models.Movie {
@@ -18,8 +19,25 @@ func NewMovie(name string, path string) models.Movie {
 
 	m.SetIdentifier()
 	m.ActorIds = make([]primitive.ObjectID, 0)
+	m.Updated = time.Now()
 
 	return m
+}
+
+func FindOrCreate(name string, path string) (*models.Movie, error) {
+	mv, err := GetMovieByIdentifier(models.MovieIdentifier(path))
+	if err != nil && err.Error() != "mongo: no documents in result" {
+		return nil, err
+	}
+
+	if mv != nil {
+		return mv, nil
+	}
+
+	m := NewMovie(name, path)
+	_, err = m.Create()
+
+	return &m, nil
 }
 
 func GetMovieById(id primitive.ObjectID) (*models.Movie, error) {
@@ -112,6 +130,12 @@ func UnknownMovies() (*[]models.Movie, error) {
 }
 
 func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
+	mvs := make([]models.Movie, 0)
+
+	if len(ids) == 0 {
+		return &mvs, nil
+	}
+
 	cAndT, err := db.GetCollectionAndContext(db.MovieCollection)
 	if err != nil {
 		return nil, err
@@ -143,7 +167,6 @@ func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
 		return nil, err
 	}
 
-	mvs := make([]models.Movie, 0)
 
 	defer c.Close(cAndT.Ctx)
 
@@ -163,4 +186,15 @@ func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
 	})
 
 	return &mvs, nil
+}
+
+func DeleteMovie(id primitive.ObjectID) error {
+	cAndT, err := db.GetCollectionAndContext(db.MovieCollection)
+	if err != nil {
+		return err
+	}
+
+	par := bson.D{{ Key: "_id", Value: id }}
+	_, err = cAndT.Col.DeleteOne(cAndT.Ctx, par)
+	return err
 }

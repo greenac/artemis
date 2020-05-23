@@ -7,11 +7,10 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/utils"
 	"net/http"
+	"strings"
 )
 
 func UnknownMovies(w http.ResponseWriter, r *http.Request) {
-	logger.Log("Getting unknown movies...")
-
 	res := utils.Response{Code: http.StatusOK}
 
 	mvs, err := dbinteractors.UnknownMovies()
@@ -26,8 +25,6 @@ func UnknownMovies(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddActorsToMovie(w http.ResponseWriter, r *http.Request) {
-	logger.Log("Adding actors to movie")
-
 	res := utils.Response{Code: http.StatusOK}
 
 	var body struct {
@@ -56,8 +53,6 @@ func AddActorsToMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func OpenMovie(w http.ResponseWriter, r *http.Request) {
-	logger.Log("Getting unknown movies...")
-
 	res := utils.Response{Code: http.StatusOK}
 	qry := r.URL.Query()
 
@@ -89,8 +84,6 @@ func OpenMovie(w http.ResponseWriter, r *http.Request) {
 }
 
 func MoviesForIds(w http.ResponseWriter, r *http.Request) {
-	logger.Log("Getting movies for ids...")
-
 	res := utils.Response{Code: http.StatusOK}
 
 	var body struct {
@@ -112,5 +105,55 @@ func MoviesForIds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.SetPayload("movies", mvs)
+	res.Respond(w)
+}
+
+func RemoveMovie(w http.ResponseWriter, r *http.Request) {
+	logger.Log("RemoveMovie...")
+
+	res := utils.Response{Code: http.StatusOK}
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("RemoveMovie::query string has incorrect params:", qry)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	logger.Log("deleting movie:", qry.Get("movieId"))
+
+	err := handlers.DeleteMovie(qry.Get("movieId"))
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("success", true)
+	res.Respond(w)
+}
+
+func SearchMovieByDate(w http.ResponseWriter, r *http.Request) {
+	res := utils.Response{Code: http.StatusOK}
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("SearchMovieByDate::query string has incorrect params:", qry)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	name := qry.Get("name")
+	name = strings.ReplaceAll(name, "\"", "")
+	mvs, err := handlers.SearchMoviesByDate(qry.Get("name"))
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("data", map[string]interface{}{"movies": mvs, "count": len(*mvs), "page": 1})
 	res.Respond(w)
 }

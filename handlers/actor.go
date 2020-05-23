@@ -243,7 +243,5 @@ func CreateNewActor(name string) (models.Actor, error) {
 		return a, err
 	}
 
-	logger.Debug("Created actor:", a, a.Id)
-
 	return a, nil
 }
