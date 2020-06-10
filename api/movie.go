@@ -7,20 +7,47 @@ import (
 	"github.com/greenac/artemis/logger"
 	"github.com/greenac/artemis/utils"
 	"net/http"
-	"strings"
+	"strconv"
 )
 
 func UnknownMovies(w http.ResponseWriter, r *http.Request) {
 	res := utils.Response{Code: http.StatusOK}
 
-	mvs, err := dbinteractors.UnknownMovies()
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("UnknownMovies::query string has incorrect params:", qry)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	logger.Log("getting from query:", qry.Get("page"))
+
+	page, err := strconv.Atoi(qry.Get("page"))
+	if err != nil {
+		logger.Error("UnknownMovies::failed to parse page:", qry.Get("page"), err)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	mvs, total, err := dbinteractors.UnknownMovies(page, PaginatedSize)
 	if err != nil {
 		res.Code = http.StatusInternalServerError
 		res.Respond(w)
 		return
 	}
 
-	res.SetPayload("movies", mvs)
+	pr := PaginatedResponse{
+		Movies: mvs,
+		Page: page,
+		Length: len(*mvs),
+		Size: PaginatedSize,
+		Total: total,
+	}
+
+	res.SetPayloadNoKey(&pr)
 	res.Respond(w)
 }
 
@@ -145,8 +172,6 @@ func SearchMovieByDate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := qry.Get("name")
-	name = strings.ReplaceAll(name, "\"", "")
 	mvs, err := handlers.SearchMoviesByDate(qry.Get("name"))
 	if err != nil {
 		res.Code = http.StatusBadRequest
@@ -155,5 +180,27 @@ func SearchMovieByDate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	res.SetPayload("data", map[string]interface{}{"movies": mvs, "count": len(*mvs), "page": 1})
+	res.Respond(w)
+}
+
+func GetActorsForMovie(w http.ResponseWriter, r *http.Request) {
+	res := utils.Response{Code: http.StatusOK}
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("GetActorsForMovie::query string has incorrect params:", qry)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	acts, err := handlers.ActorsInMovie(qry.Get("movieId"))
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("data", map[string]interface{}{"actors": acts, "count": len(*acts), "page": 1})
 	res.Respond(w)
 }

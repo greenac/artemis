@@ -309,3 +309,13 @@ func SearchMoviesByDate(name string) (*[]models.Movie, error) {
 
 	return &movs, nil
 }
+
+func ActorsInMovie(movieId string) (*[]models.Actor, error) {
+	m, err := dbinteractors.GetMovieByIdString(movieId)
+	if err != nil { return nil, err }
+
+	acts, err := dbinteractors.GetActorsForIds(m.ActorIds)
+	if err != nil { return nil, err }
+
+	return acts, nil
+}

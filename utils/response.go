@@ -29,3 +29,7 @@ func (r *Response) Respond(w http.ResponseWriter) {
 func (r *Response) SetPayload(key string, payload interface{}) {
 	r.Payload = map[string]interface{}{key: payload}
 }
+
+func (r *Response) SetPayloadNoKey(payload interface{}) {
+	r.Payload = payload
+}

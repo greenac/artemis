@@ -19,12 +19,14 @@ const (
 	actorsMatchWithMovies       string = "/api/actor/match-with-movies"
 	actorsSimpleMatchWithMovies string = "/api/actor/simple-match-with-movies"
 	actorsMovies                string = "/api/actor/movies"
+	actorsRecent                string = "/api/actor/recent"
 	addActorsToMovie            string = "/api/movie/add-actors"
 	openMovie                   string = "/api/movie/open"
 	unknownMovies               string = "/api/movie/unknown"
 	moviesForIds                string = "/api/movie/ids"
 	deleteMovie                 string = "/api/movie/delete"
 	searchMovieByDate           string = "/api/movie/search-date"
+	actorsForMovie              string = "/api/movie/actors"
 )
 
 func StartServer(ac *config.ArtemisConfig) {
@@ -43,6 +45,7 @@ func StartServer(ac *config.ArtemisConfig) {
 	http.HandleFunc(actorsSimpleMatchWithMovies, api.ActorsSimpleMatchingInputWithMovies)
 	http.HandleFunc(newActor, api.CreateActorWithName)
 	http.HandleFunc(actorsMovies, api.GetMoviesForActor)
+	http.HandleFunc(actorsRecent, api.ActorsByDate)
 
 	// movie routes
 	http.HandleFunc(unknownMovies, api.UnknownMovies)
@@ -51,6 +54,7 @@ func StartServer(ac *config.ArtemisConfig) {
 	http.HandleFunc(moviesForIds, api.MoviesForIds)
 	http.HandleFunc(deleteMovie, api.RemoveMovie)
 	http.HandleFunc(searchMovieByDate, api.SearchMovieByDate)
+	http.HandleFunc(actorsForMovie, api.GetActorsForMovie)
 
 	log.Fatal(http.ListenAndServe(url, nil))
 }
