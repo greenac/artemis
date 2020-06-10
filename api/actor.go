@@ -211,3 +211,17 @@ func GetMoviesForActor(w http.ResponseWriter, r *http.Request) {
 	res.SetPayload("movies", mvs)
 	res.Respond(w)
 }
+
+func ActorsByDate(w http.ResponseWriter, r *http.Request) {
+	res := utils.Response{Code: http.StatusOK}
+
+	acts, err := dbinteractors.ActorsByDate()
+	if err != nil {
+		res.Code = http.StatusInternalServerError
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("data", map[string]interface{}{"actors": acts, "count": len(*acts), "page": 1})
+	res.Respond(w)
+}

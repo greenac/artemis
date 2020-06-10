@@ -27,6 +27,7 @@ type Actor struct {
 	LastName   string               `json:"lastName" bson:"lastName"`
 	MovieIds   []primitive.ObjectID `json:"movieIds" bson:"movieIds"`
 	Updated    time.Time            `json:"updated" bson:"updated"`
+	Movies     *[]Movie             `json:"movies"`
 }
 
 // Model Interface methods

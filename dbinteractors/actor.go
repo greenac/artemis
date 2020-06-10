@@ -530,3 +530,49 @@ func GetActorsForInputSimple(input string, withMovs bool) (*[]models.Actor, erro
 
 	return &acts, nil
 }
+
+func ActorsByDate() (*[]models.Actor, error) {
+	acts := make([]models.Actor, 0)
+
+	var filter = bson.D{}
+
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Find()
+	opts.SetSort(bson.D{
+		{"updated", -1},
+	})
+	opts.SetLimit(300)
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, filter, opts)
+	if err != nil {
+		logger.Error("ActorsByDate::Failed with error:", err)
+		return nil, err
+	}
+
+	defer cur.Close(cAndT.Ctx)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("ActorsByDate::Failed to decode movie with error:", err)
+			continue
+		}
+
+		if len(a.MovieIds) > 0 {
+			mvs, err := MoviesForIds(a.MovieIds)
+			if err == nil {
+				a.Movies = mvs
+			}
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
+}

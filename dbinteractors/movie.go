@@ -93,10 +93,10 @@ func DoesMovieExist(identifier string) (bool, error) {
 	return m != nil, nil
 }
 
-func UnknownMovies() (*[]models.Movie, error) {
+func UnknownMovies(page int, size int) (*[]models.Movie, int, error) {
 	cAndT, err := db.GetCollectionAndContext(db.MovieCollection)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	q := map[string]interface{}{"$size": 0}
@@ -104,7 +104,7 @@ func UnknownMovies() (*[]models.Movie, error) {
 	c, err := cAndT.Col.Find(cAndT.Ctx, bson.M{"actorIds": q})
 	if err != nil {
 		logger.Error("UnknownMovies::Failed to find unknown movies:", err)
-		return nil, err
+		return nil, 0, err
 	}
 
 	mvs := make([]models.Movie, 0)
@@ -126,7 +126,18 @@ func UnknownMovies() (*[]models.Movie, error) {
 		return strings.ToLower(mvs[i].Name) < strings.ToLower(mvs[j].Name)
 	})
 
-	return &mvs, nil
+	pMvs := make([]models.Movie, size)
+	start := page * size
+	end := start + size
+	if end > len(mvs) {
+		end = len(mvs)
+	}
+
+	for i := start; i < end; i += 1 {
+		pMvs[i - start] = mvs[i]
+	}
+
+	return &pMvs, len(mvs), nil
 }
 
 func MoviesForIds(ids []primitive.ObjectID) (*[]models.Movie, error) {
