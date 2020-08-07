@@ -36,7 +36,7 @@ func (ah *ArtemisHandler) Setup(movieDirPaths *[]models.FilePath) error {
 	return nil
 }
 
-func (ah *ArtemisHandler) Save() {
+func (ah *ArtemisHandler) Save(saveIfExts bool) {
 	for _, m := range ah.MovieHandler.Movies {
 		m.GetNewName()
 
@@ -46,7 +46,11 @@ func (ah *ArtemisHandler) Save() {
 			ex = false
 		}
 
-		if !ex {
+		if ex {
+			if !saveIfExts {
+				continue
+			}
+		} else {
 			_, err = mm.Create()
 			if err != nil {
 				continue

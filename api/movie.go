@@ -39,12 +39,14 @@ func UnknownMovies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pr := PaginatedResponse{
+	pr := PaginatedMovieResponse{
 		Movies: mvs,
-		Page: page,
-		Length: len(*mvs),
-		Size: PaginatedSize,
-		Total: total,
+		PaginatedResponse: PaginatedResponse{
+			Page: page,
+			Length: len(*mvs),
+			Size: PaginatedSize,
+			Total: total,
+		},
 	}
 
 	res.SetPayloadNoKey(&pr)

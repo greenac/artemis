@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"sort"
 	"strings"
 	"time"
 )
@@ -35,7 +36,42 @@ func AllActors() (*[]models.Actor, error) {
 
 		err := cur.Decode(&a)
 		if err != nil {
-			logger.Warn("AllActors failed to decode actor with error:", err)
+			logger.Warn("AllActors::failed to decode actor with error:", err)
+			continue
+		}
+
+		acts = append(acts, a)
+	}
+
+	return &acts, nil
+}
+
+func ActorsAtPage(page int) (*[]models.Actor, error) {
+	cAndT, err := db.GetCollectionAndContext(db.ActorCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := options.Find()
+	opts.SetSkip(int64(page * MaxActorsToReturn))
+	opts.SetLimit(MaxActorsToReturn)
+
+	cur, err := cAndT.Col.Find(cAndT.Ctx, bson.M{}, opts)
+	if err != nil {
+		logger.Error("ActorsAtPage::failed with error:", err)
+		return nil, err
+	}
+
+	acts := make([]models.Actor, 0)
+
+	defer cur.Close(cAndT.Ctx)
+
+	for cur.Next(cAndT.Ctx) {
+		var a models.Actor
+
+		err := cur.Decode(&a)
+		if err != nil {
+			logger.Warn("ActorsAtPage::failed to decode actor with error:", err)
 			continue
 		}
 
@@ -372,6 +408,10 @@ func GetActorsForInput(input string, withMovs bool) (*[]models.Actor, error) {
 
 		acts = append(acts, a)
 	}
+
+	sort.Slice(acts, func(i int, j int) bool {
+		return acts[i].FullName() < acts[j].FullName()
+	})
 
 	return &acts, nil
 }

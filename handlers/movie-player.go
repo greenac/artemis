@@ -17,6 +17,7 @@ func OpenMovie(m *models.Movie) error {
 		return artemiserror.New(artemiserror.ArgsNotInitialized)
 	}
 
+	//cmd := exec.Command("open", "-a", "quicktime player", m.Path)
 	cmd := exec.Command(pp, m.Path)
 	err := cmd.Start()
 	if err != nil {

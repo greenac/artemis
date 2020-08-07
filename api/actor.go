@@ -8,6 +8,7 @@ import (
 	"github.com/greenac/artemis/utils"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -38,11 +39,39 @@ func GetActor(w http.ResponseWriter, r *http.Request) {
 }
 
 func AllActors(w http.ResponseWriter, r *http.Request) {
-	logger.Log("Getting all actors...")
-
 	res := utils.Response{Code: http.StatusOK}
 
 	acts, err := dbinteractors.AllActors()
+	if err != nil {
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	res.SetPayload("actors", acts)
+	res.Respond(w)
+}
+
+func PaginatedActors(w http.ResponseWriter, r *http.Request) {
+	res := utils.Response{Code: http.StatusOK}
+	qry := r.URL.Query()
+
+	if len(qry) != 1 {
+		logger.Error("PaginatedActors::query string has incorrect params:", qry)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	page, err := strconv.Atoi(strings.Trim(qry.Get("page"), " "))
+	if err != nil {
+		logger.Error("PaginatedActors::failed to convert query to int:", err)
+		res.Code = http.StatusBadRequest
+		res.Respond(w)
+		return
+	}
+
+	acts, err := dbinteractors.ActorsAtPage(page)
 	if err != nil {
 		res.Code = http.StatusBadRequest
 		res.Respond(w)

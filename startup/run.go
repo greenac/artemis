@@ -55,7 +55,7 @@ func SaveMoviesInDirs(ac *config.ArtemisConfig) {
 		panic(err)
 	}
 
-	ah.Save()
+	ah.Save(false)
 }
 
 func WriteNamesToFile(ac *config.ArtemisConfig) {

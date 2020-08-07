@@ -14,6 +14,7 @@ const (
 	actor                       string = "/api/actor"
 	allActors                   string = "/api/actor/all"
 	allActorsWithMovies         string = "/api/actor/all-with-movies"
+	paginatedActors             string = "/api/actor/paginated"
 	newActor                    string = "/api/actor/new"
 	actorsMatch                 string = "/api/actor/match"
 	actorsMatchWithMovies       string = "/api/actor/match-with-movies"
@@ -46,6 +47,7 @@ func StartServer(ac *config.ArtemisConfig) {
 	http.HandleFunc(newActor, api.CreateActorWithName)
 	http.HandleFunc(actorsMovies, api.GetMoviesForActor)
 	http.HandleFunc(actorsRecent, api.ActorsByDate)
+	http.HandleFunc(paginatedActors, api.PaginatedActors)
 
 	// movie routes
 	http.HandleFunc(unknownMovies, api.UnknownMovies)
