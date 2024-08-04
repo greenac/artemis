@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/greenac/artemis/artemiserror"
-	"github.com/greenac/artemis/config"
-	"github.com/greenac/artemis/logger"
-	"github.com/greenac/artemis/startup"
+	"github.com/greenac/artemis/pkg/artemiserror"
+	"github.com/greenac/artemis/pkg/config"
+	"github.com/greenac/artemis/pkg/logger"
+	"github.com/greenac/artemis/pkg/startup"
 	"github.com/joho/godotenv"
 	"io/ioutil"
 	"os"
@@ -63,8 +63,14 @@ func main() {
 		startup.TestRun(&ac)
 	case startup.ConvertOrganized:
 		startup.UpdateOrganizedMovies(&ac)
-	case startup.RemoveLinks:
-		startup.RemoveSymLinks(&ac)
+	case startup.RenameMovies:
+		startup.RenameAllMovies(&ac)
+	case startup.Fix21Path:
+		startup.Fix21(&ac)
+	case startup.CheckGolf:
+		startup.CheckGolfMovies(&ac)
+	case startup.AddMissingMoviesToActor:
+		_ = startup.FixMissingMoviesForActors(&ac)
 	default:
 		logger.Error("Unknown run type:", rt)
 		panic(artemiserror.New(artemiserror.InvalidParameter))
