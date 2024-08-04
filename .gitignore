@@ -1,1 +1,6 @@
-*.env
+tmp/
+.env
+.idea/
+__debug_bin
+vendor
+plots
