@@ -21,4 +21,5 @@ type ArtemisConfig struct {
 	Port            int         `json:"port"`
 	VlcPath         string      `json:"vlcPath"`
 	Mongo           MongoConfig `json:"mongo"`
+	ProfilePicPath  string      `json:"profilePicPath"`
 }
