@@ -338,7 +338,7 @@ func GetActorProfilePicture(w http.ResponseWriter, r *http.Request) {
 		path.Join(basePath, "profile-pics/"),
 		path.Join(basePath, "profile-pics-manual/"),
 	}
-	
+
 	var imageData []byte
 	for _, p := range imagePaths {
 		imagePath := fmt.Sprintf("%s.jpg", path.Join(p, actorId))

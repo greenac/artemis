@@ -158,7 +158,6 @@ func GetConfig() (config.ArtemisConfig, error) {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
-		return config.ArtemisConfig{}, err
 	}
 
 	lp := os.Getenv("LOG_PATH")
