@@ -158,7 +158,6 @@ func GetConfig() (config.ArtemisConfig, error) {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file:", err)
-		return config.ArtemisConfig{}, err
 	}
 
 	lp := os.Getenv("LOG_PATH")
@@ -168,7 +167,7 @@ func GetConfig() (config.ArtemisConfig, error) {
 
 	logger.Log("Starting artemis...")
 
-	cp := os.Getenv("CONFIG_PATH")
+	cp := os.Getenv("ARTEMIS_CONFIG_PATH")
 	if cp == "" {
 		logger.Error("No config path set")
 		return config.ArtemisConfig{}, err

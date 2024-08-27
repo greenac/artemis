@@ -6,6 +6,7 @@ import (
 	"github.com/greenac/artemis/pkg/dbinteractors"
 	"github.com/greenac/artemis/pkg/handlers"
 	"github.com/greenac/artemis/pkg/logger"
+	"github.com/greenac/artemis/pkg/middleware"
 	"github.com/greenac/artemis/pkg/utils"
 	"net/http"
 	"os"
@@ -323,11 +324,19 @@ func GetActorProfilePicture(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ctx := r.Context()
+	basePath, ok := ctx.Value(middleware.ProfilePickMiddleWarePathKey).(string)
+	if !ok {
+		logger.Error("GetActorProfilePicture->Missing profile pic path in context", basePath)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	actorId := strings.Trim(qry.Get("actorId"), " ")
 
 	imagePaths := []string{
-		"/Users/andre/Documents/artemis/profile-pics/",
-		"/Users/andre/Documents/artemis/profile-pics-manual/",
+		path.Join(basePath, "profile-pics/"),
+		path.Join(basePath, "profile-pics-manual/"),
 	}
 
 	var imageData []byte
@@ -353,4 +362,6 @@ func GetActorProfilePicture(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("GetActorProfilePicture->Failed to write response with error:", err)
 	}
+
+	logger.Log("GetActorProfilePicture->Successfully retrieved profile pic for actor:", actorId)
 }

@@ -9,16 +9,25 @@ type MongoConfig struct {
 	} `json:"collections"`
 }
 
+type ProfileImageConfig struct {
+	ImageSiteBaseUrl string `json:"imageSiteBaseUrl"`
+	HtmlTarget       string `json:"htmlTarget"`
+	DestPath         string `json:"destPath"`
+}
+
 type ArtemisConfig struct {
-	TargetDirs      []string    `json:"targetDirs"`
-	ActorDirs       []string    `json:"actorDirs"`
-	ActorNamesFile  string      `json:"actorNamesFile"`
-	CachedNamesFile string      `json:"cachedNamesFile"`
-	OrganizedDir    string      `json:"organizedDir"`
-	ToDir           string      `json:"toDir"`
-	FromDir         string      `json:"fromDir"`
-	Url             string      `json:"url"`
-	Port            int         `json:"port"`
-	VlcPath         string      `json:"vlcPath"`
-	Mongo           MongoConfig `json:"mongo"`
+	TargetDirs         []string           `json:"targetDirs"`
+	ActorDirs          []string           `json:"actorDirs"`
+	ActorNamesFile     string             `json:"actorNamesFile"`
+	CachedNamesFile    string             `json:"cachedNamesFile"`
+	OrganizedDir       string             `json:"organizedDir"`
+	ToDir              string             `json:"toDir"`
+	FromDir            string             `json:"fromDir"`
+	Url                string             `json:"url"`
+	Port               int                `json:"port"`
+	VlcPath            string             `json:"vlcPath"`
+	Mongo              MongoConfig        `json:"mongo"`
+	ProfilePicPath     string             `json:"profilePicPath"`
+	ImageSiteBaseUrl   string             `json:"imageSiteBaseUrl"`
+	ProfileImageConfig ProfileImageConfig `json:"profileImageConfig"`
 }

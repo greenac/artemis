@@ -25,10 +25,10 @@ func main() {
 
 	input := handlers.SaveImageInput{
 		RestClient: &rc,
-		BaseUrl:    "https://www.data18.com/name/",
-		HtmlTarget: "https://cdn.dt18.com/images/names",
+		BaseUrl:    ac.ProfileImageConfig.ImageSiteBaseUrl,
+		HtmlTarget: ac.ProfileImageConfig.HtmlTarget,
 		Separator:  "src=",
-		DestPath:   "/Users/andre/Documents/artemis/profile-pics/",
+		DestPath:   ac.ProfileImageConfig.DestPath,
 		Cookies:    &[]http.Cookie{{Name: "data_user_captcha", Value: "1"}},
 	}
 

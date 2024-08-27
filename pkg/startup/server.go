@@ -6,6 +6,7 @@ import (
 	"github.com/greenac/artemis/pkg/config"
 	"github.com/greenac/artemis/pkg/db"
 	"github.com/greenac/artemis/pkg/logger"
+	"github.com/greenac/artemis/pkg/middleware"
 	"log"
 	"net/http"
 )
@@ -39,7 +40,6 @@ func StartServer(ac *config.ArtemisConfig) {
 	url := fmt.Sprintf("%s:%d", ac.Url, ac.Port)
 
 	logger.Log("Starting artemis server on", url)
-
 	// Actor routes
 	http.HandleFunc(actor, api.GetActor)
 	http.HandleFunc(allActors, api.AllActors)
@@ -50,7 +50,7 @@ func StartServer(ac *config.ArtemisConfig) {
 	http.HandleFunc(newActor, api.CreateActorWithName)
 	http.HandleFunc(actorsMovies, api.GetMoviesForActor)
 	http.HandleFunc(actorsRecent, api.ActorsByDate)
-	http.HandleFunc(actorsProfilePic, api.GetActorProfilePicture)
+	http.Handle(actorsProfilePic, middleware.ProfilePicMiddleware(ac.ProfilePicPath, api.GetActorProfilePicture))
 	http.HandleFunc(paginatedActors, api.PaginatedActors)
 
 	// movie routes
