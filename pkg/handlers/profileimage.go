@@ -15,12 +15,15 @@ import (
 )
 
 type SaveImageInput struct {
-	RestClient rest.IClient
-	BaseUrl    string
-	HtmlTarget string
-	Separator  string
-	DestPath   string
-	Cookies    *[]http.Cookie
+	RestClient  rest.IClient
+	BaseUrl     string
+	BaseUrl2    string
+	SubBaseUrl2 string
+	HtmlTarget  string
+	HtmlTarget2 string
+	Separator   string
+	DestPath    string
+	Cookies     *[]http.Cookie
 }
 
 type saveImageResult struct {
@@ -145,7 +148,7 @@ func scrapeTaskSite1(input SaveImageInput, actor models.Actor) saveImageResult {
 
 func scrapeTaskSite2(input SaveImageInput, actor models.Actor) saveImageResult {
 	actorName := strings.ReplaceAll(actor.FullName(), "_", "")
-	htmlUrl, err := url.JoinPath("https://www.eurobabeindex.com/sbandoindex/", actorName+".html")
+	htmlUrl, err := url.JoinPath(input.BaseUrl2, actorName+".html")
 	if err != nil {
 		logger.Error("scrapeTaskSite2->failed join base url and name with error:", err)
 		return saveImageResult{Actor: actor, Error: err}
@@ -166,7 +169,7 @@ func scrapeTaskSite2(input SaveImageInput, actor models.Actor) saveImageResult {
 
 	var targetUrl string
 	for _, l := range lines {
-		if strings.Contains(l, `name="babeimg"`) {
+		if strings.Contains(l, input.HtmlTarget2) {
 			parts := strings.Split(l, " ")
 			for _, p := range parts {
 				if strings.Contains(p, input.Separator) {
@@ -181,7 +184,7 @@ func scrapeTaskSite2(input SaveImageInput, actor models.Actor) saveImageResult {
 		return saveImageResult{Actor: actor, Error: errs.NewGenError("no target found")}
 	}
 
-	targetUrl, e := url.JoinPath("https://www.eurobabeindex.com/", targetUrl)
+	targetUrl, e := url.JoinPath(input.SubBaseUrl2, targetUrl)
 	if e != nil {
 		logger.Error("scrapeTaskSite2->failed to make target url for actor:", actor.FullName())
 		return saveImageResult{Actor: actor, Error: errs.NewGenError("making target url failed")}

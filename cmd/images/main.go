@@ -24,12 +24,15 @@ func main() {
 	}
 
 	input := handlers.SaveImageInput{
-		RestClient: &rc,
-		BaseUrl:    ac.ProfileImageConfig.ImageSiteBaseUrl,
-		HtmlTarget: ac.ProfileImageConfig.HtmlTarget,
-		Separator:  "src=",
-		DestPath:   ac.ProfileImageConfig.DestPath,
-		Cookies:    &[]http.Cookie{{Name: "data_user_captcha", Value: "1"}},
+		RestClient:  &rc,
+		BaseUrl:     ac.ProfileImageConfig.ImageSiteBaseUrl,
+		BaseUrl2:    ac.ProfileImageConfig.ImageSiteBaseUrl2,
+		SubBaseUrl2: ac.ProfileImageConfig.ImageSiteBaseUrl2,
+		HtmlTarget:  ac.ProfileImageConfig.HtmlTarget,
+		HtmlTarget2: ac.ProfileImageConfig.HtmlTarget2,
+		Separator:   "src=",
+		DestPath:    ac.ProfileImageConfig.DestPath,
+		Cookies:     &[]http.Cookie{{Name: "data_user_captcha", Value: "1"}},
 	}
 
 	err = startup.SaveImages(&ac, input)

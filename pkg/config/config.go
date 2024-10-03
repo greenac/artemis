@@ -10,9 +10,12 @@ type MongoConfig struct {
 }
 
 type ProfileImageConfig struct {
-	ImageSiteBaseUrl string `json:"imageSiteBaseUrl"`
-	HtmlTarget       string `json:"htmlTarget"`
-	DestPath         string `json:"destPath"`
+	ImageSiteBaseUrl     string `json:"imageSiteBaseUrl"`
+	ImageSiteBaseUrl2    string `json:"imageSiteBaseUrl2"`
+	ImageSiteSubBaseUrl2 string `json:"imageSiteSubBaseUrl2"`
+	HtmlTarget           string `json:"htmlTarget"`
+	HtmlTarget2          string `json:"htmlTarget2"`
+	DestPath             string `json:"destPath"`
 }
 
 type ArtemisConfig struct {
