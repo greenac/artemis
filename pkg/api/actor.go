@@ -335,8 +335,8 @@ func GetActorProfilePicture(w http.ResponseWriter, r *http.Request) {
 	actorId := strings.Trim(qry.Get("actorId"), " ")
 
 	imagePaths := []string{
-		path.Join(basePath, "profile-pics/"),
 		path.Join(basePath, "profile-pics-manual/"),
+		path.Join(basePath, "profile-pics/"),
 	}
 
 	var imageData []byte
