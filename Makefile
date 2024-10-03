@@ -6,6 +6,10 @@ serve:
 save:
 	go run cmd/save/main.go
 
+.PHONY: build
+build:
+	go build -o ~/go/bin/serveartemis cmd/serve/main.go
+
 .PHONY: addactorstomovies
 addactorstomovies:
 	go run cmd/addactorstomovies/main.go
